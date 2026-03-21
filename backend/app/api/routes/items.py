@@ -1,10 +1,9 @@
 import uuid
-from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from sqlmodel import col, func, select
 
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import CurrentUser, PaginationLimit, PaginationSkip, SessionDep
 from app.models import Item, ItemCreate, ItemPublic, ItemsPublic, ItemUpdate, Message
 
 router = APIRouter(prefix="/items", tags=["items"])
@@ -12,8 +11,11 @@ router = APIRouter(prefix="/items", tags=["items"])
 
 @router.get("/", response_model=ItemsPublic)
 def read_items(
-    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
-) -> Any:
+    session: SessionDep,
+    current_user: CurrentUser,
+    skip: PaginationSkip = 0,
+    limit: PaginationLimit = 100,
+) -> ItemsPublic:
     """
     Retrieve items.
     """
@@ -45,7 +47,7 @@ def read_items(
 
 
 @router.get("/{id}", response_model=ItemPublic)
-def read_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> Any:
+def read_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> ItemPublic:
     """
     Get item by ID.
     """
@@ -60,7 +62,7 @@ def read_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> 
 @router.post("/", response_model=ItemPublic)
 def create_item(
     *, session: SessionDep, current_user: CurrentUser, item_in: ItemCreate
-) -> Any:
+) -> ItemPublic:
     """
     Create new item.
     """
@@ -71,14 +73,14 @@ def create_item(
     return item
 
 
-@router.put("/{id}", response_model=ItemPublic)
+@router.patch("/{id}", response_model=ItemPublic)
 def update_item(
     *,
     session: SessionDep,
     current_user: CurrentUser,
     id: uuid.UUID,
     item_in: ItemUpdate,
-) -> Any:
+) -> ItemPublic:
     """
     Update an item.
     """

@@ -2,7 +2,7 @@ from collections.abc import Generator
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
@@ -25,6 +25,8 @@ def get_db() -> Generator[Session, None, None]:
 
 SessionDep = Annotated[Session, Depends(get_db)]
 TokenDep = Annotated[str, Depends(reusable_oauth2)]
+PaginationSkip = Annotated[int, Query(ge=0, description="Number of records to skip")]
+PaginationLimit = Annotated[int, Query(ge=1, le=1000, description="Maximum number of records to return")]
 
 
 def get_current_user(session: SessionDep, token: TokenDep) -> User:
