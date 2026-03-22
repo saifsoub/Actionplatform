@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Action Platform — Live Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+  }
+
+  /* ── Layout ── */
+  .layout { display: flex; height: 100vh; overflow: hidden; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px;
+    background: #161b22;
+    border-right: 1px solid #30363d;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .sidebar-logo {
+    padding: 20px 16px 16px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #58a6ff;
+    border-bottom: 1px solid #30363d;
+    letter-spacing: -0.3px;
+  }
+  .sidebar-logo span { color: #e2e8f0; }
+  .sidebar-nav { padding: 8px 0; flex: 1; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px;
+    cursor: pointer;
+    font-size: 13.5px;
+    color: #8b949e;
+    border-radius: 0;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: #1c2128; color: #e2e8f0; }
+  .nav-item.active { color: #58a6ff; border-left-color: #58a6ff; background: #1c2128; }
+  .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+  .sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #30363d;
+    font-size: 12px;
+    color: #6e7681;
+  }
+  .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #3fb950; margin-right: 6px; }
+
+  /* ── Main ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ── Header ── */
+  .header {
+    padding: 16px 24px;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-title { font-size: 17px; font-weight: 600; }
+  .header-actions { display: flex; gap: 10px; }
+  .btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid #30363d;
+    background: #21262d;
+    color: #c9d1d9;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn:hover { background: #30363d; color: #e2e8f0; }
+  .btn-primary { background: #238636; border-color: #2ea043; color: #fff; }
+  .btn-primary:hover { background: #2ea043; }
+
+  /* ── Content area ── */
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 2px; margin-bottom: 20px; border-bottom: 1px solid #30363d; }
+  .tab {
+    padding: 8px 16px;
+    font-size: 13.5px;
+    cursor: pointer;
+    color: #8b949e;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: #e2e8f0; }
+  .tab.active { color: #58a6ff; border-bottom-color: #58a6ff; }
+
+  /* ── Cards ── */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 18px;
+  }
+  .card-label { font-size: 12px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .card-value { font-size: 26px; font-weight: 700; color: #e2e8f0; }
+  .card-sub { font-size: 12px; color: #3fb950; margin-top: 4px; }
+
+  /* ── Table ── */
+  .table-wrap {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .table-head {
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #30363d;
+  }
+  .table-head-title { font-size: 14px; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    padding: 10px 18px;
+    text-align: left;
+    font-size: 12px;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #1c2128;
+    border-bottom: 1px solid #30363d;
+  }
+  td {
+    padding: 12px 18px;
+    font-size: 13.5px;
+    border-bottom: 1px solid #21262d;
+    color: #c9d1d9;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #1c2128; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-green { background: #0d2e17; color: #3fb950; border: 1px solid #1a4226; }
+  .badge-blue  { background: #0d1b35; color: #58a6ff; border: 1px solid #1a3560; }
+  .badge-gray  { background: #1c2128; color: #8b949e; border: 1px solid #30363d; }
+
+  /* ── Login form ── */
+  .login-wrap {
+    max-width: 380px;
+    margin: 60px auto;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 32px;
+  }
+  .login-wrap h2 { font-size: 20px; margin-bottom: 6px; }
+  .login-wrap p { font-size: 13px; color: #8b949e; margin-bottom: 24px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; color: #c9d1d9; margin-bottom: 6px; }
+  .form-group input {
+    width: 100%;
+    padding: 9px 12px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #e2e8f0;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-group input:focus { border-color: #58a6ff; }
+  .form-error { color: #f85149; font-size: 12px; margin-top: 10px; display: none; }
+  .btn-full { width: 100%; padding: 10px; font-size: 14px; }
+
+  /* ── Chat ── */
+  .chat-wrap {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    height: 440px;
+  }
+  .chat-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid #30363d;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chat-ai-badge {
+    font-size: 10px;
+    background: #0d1b35;
+    color: #58a6ff;
+    border: 1px solid #1a3560;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .msg { display: flex; gap: 10px; }
+  .msg-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .msg-avatar.user { background: #238636; }
+  .msg-avatar.ai   { background: #1a3560; }
+  .msg-body { flex: 1; }
+  .msg-name { font-size: 11px; color: #8b949e; margin-bottom: 3px; }
+  .msg-text {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: #c9d1d9;
+    background: #1c2128;
+    border-radius: 0 8px 8px 8px;
+    padding: 10px 13px;
+    display: inline-block;
+    max-width: 90%;
+    white-space: pre-wrap;
+  }
+  .msg.user { flex-direction: row-reverse; }
+  .msg.user .msg-body { text-align: right; }
+  .msg.user .msg-text { border-radius: 8px 0 8px 8px; background: #0d2e17; }
+  .chat-input-row {
+    padding: 12px;
+    border-top: 1px solid #30363d;
+    display: flex;
+    gap: 8px;
+  }
+  .chat-input {
+    flex: 1;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #e2e8f0;
+    font-size: 13.5px;
+    padding: 9px 12px;
+    outline: none;
+    resize: none;
+    font-family: inherit;
+    transition: border-color 0.15s;
+  }
+  .chat-input:focus { border-color: #58a6ff; }
+  .chat-send {
+    background: #238636;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    padding: 9px 14px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: background 0.15s;
+  }
+  .chat-send:hover { background: #2ea043; }
+  .chat-send:disabled { background: #2a3d2a; cursor: not-allowed; opacity: 0.5; }
+
+  /* ── Spinner ── */
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #30363d;
+    border-top-color: #58a6ff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Sections ── */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── API key notice ── */
+  .api-notice {
+    background: #1c2d1c;
+    border: 1px solid #2ea043;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .api-notice input {
+    flex: 1;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 5px;
+    color: #e2e8f0;
+    padding: 6px 10px;
+    font-size: 13px;
+    outline: none;
+    font-family: monospace;
+  }
+  .api-notice input:focus { border-color: #58a6ff; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">⚡ Action<span>Platform</span></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="showSection('dashboard', this)"><span class="nav-icon">📊</span> Dashboard</div>
+      <div class="nav-item" onclick="showSection('items', this)"><span class="nav-icon">📦</span> Items</div>
+      <div class="nav-item" onclick="showSection('users', this)"><span class="nav-icon">👥</span> Users</div>
+      <div class="nav-item" onclick="showSection('ai', this)"><span class="nav-icon">🤖</span> AI Assistant</div>
+    </nav>
+    <div class="sidebar-footer">
+      <span class="status-dot"></span> Backend online · :8000
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="header">
+      <div class="header-title" id="header-title">Dashboard</div>
+      <div class="header-actions">
+        <div id="auth-status" style="font-size:13px;color:#8b949e;align-self:center;">Not logged in</div>
+        <button class="btn btn-primary" id="login-btn" onclick="showSection('login', null)">Login</button>
+        <button class="btn" id="logout-btn" onclick="logout()" style="display:none">Logout</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- LOGIN -->
+      <div class="section" id="section-login">
+        <div class="login-wrap">
+          <h2>Sign in</h2>
+          <p>Enter your credentials to access the platform.</p>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="login-email" value="admin@example.com">
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password" value="changethis">
+          </div>
+          <div class="form-error" id="login-error"></div>
+          <button class="btn btn-primary btn-full" onclick="doLogin()" style="margin-top:8px">Sign in</button>
+        </div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div class="section active" id="section-dashboard">
+        <div class="cards">
+          <div class="card">
+            <div class="card-label">Items</div>
+            <div class="card-value" id="stat-items">—</div>
+            <div class="card-sub" id="stat-items-sub">Loading…</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Users</div>
+            <div class="card-value" id="stat-users">—</div>
+            <div class="card-sub" id="stat-users-sub">Loading…</div>
+          </div>
+          <div class="card">
+            <div class="card-label">API Health</div>
+            <div class="card-value" id="stat-health">—</div>
+            <div class="card-sub" id="stat-health-sub">Checking…</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Version</div>
+            <div class="card-value">1.0</div>
+            <div class="card-sub">FastAPI + SQLAlchemy</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-head">
+            <span class="table-head-title">Recent Items</span>
+            <button class="btn" onclick="loadItems()">Refresh</button>
+          </div>
+          <table>
+            <thead><tr>
+              <th>ID</th><th>Title</th><th>Description</th><th>Owner</th><th>Status</th>
+            </tr></thead>
+            <tbody id="items-tbody">
+              <tr><td colspan="5" style="color:#8b949e;text-align:center;padding:24px">Login to see items</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ITEMS -->
+      <div class="section" id="section-items">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div style="font-size:15px;font-weight:600">All Items</div>
+          <button class="btn btn-primary" onclick="showCreateItem()">+ New Item</button>
+        </div>
+        <div id="create-item-form" style="display:none;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:18px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:600;margin-bottom:12px">Create Item</div>
+          <div class="form-group"><label>Title</label><input type="text" id="new-item-title" placeholder="Item title"></div>
+          <div class="form-group"><label>Description</label><input type="text" id="new-item-desc" placeholder="Optional description"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="createItem()">Create</button>
+            <button class="btn" onclick="document.getElementById('create-item-form').style.display='none'">Cancel</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Title</th><th>Description</th><th>Actions</th></tr></thead>
+            <tbody id="items-full-tbody">
+              <tr><td colspan="4" style="color:#8b949e;text-align:center;padding:24px">Login to see items</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- USERS -->
+      <div class="section" id="section-users">
+        <div class="table-wrap">
+          <div class="table-head"><span class="table-head-title">Users</span></div>
+          <table>
+            <thead><tr><th>ID</th><th>Email</th><th>Full Name</th><th>Role</th><th>Status</th></tr></thead>
+            <tbody id="users-tbody">
+              <tr><td colspan="5" style="color:#8b949e;text-align:center;padding:24px">Login to see users</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- AI -->
+      <div class="section" id="section-ai">
+        <div class="api-notice">
+          🔑 <strong>Anthropic API Key:</strong>
+          <input type="password" id="api-key-input" placeholder="sk-ant-…" oninput="saveKey(this.value)">
+          <button class="btn" onclick="toggleKey()">Show</button>
+        </div>
+        <div class="chat-wrap">
+          <div class="chat-head">
+            AI Assistant <span class="chat-ai-badge">claude-opus-4-6</span>
+          </div>
+          <div class="chat-messages" id="chat-messages">
+            <div class="msg ai">
+              <div class="msg-avatar ai">🤖</div>
+              <div class="msg-body">
+                <div class="msg-name">Claude</div>
+                <div class="msg-text">Hi! I'm your Action Platform assistant. I can help you manage items, answer questions, or discuss your data. What can I do for you?</div>
+              </div>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="chat-input" rows="1" placeholder="Ask anything… (Enter to send, Shift+Enter for newline)"
+              onkeydown="handleKey(event)"></textarea>
+            <button class="chat-send" id="send-btn" onclick="sendMessage()">➤</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:8000/api/v1';
+  let token = localStorage.getItem('ap_token') || '';
+
+  // ── Navigation ──
+  function showSection(name, el) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('section-' + name).classList.add('active');
+    document.getElementById('header-title').textContent = el ? el.textContent.trim() : name;
+    if (el) el.classList.add('active');
+    if (name === 'dashboard') loadDashboard();
+    if (name === 'items') loadFullItems();
+    if (name === 'users') loadUsers();
+  }
+
+  // ── Auth ──
+  async function doLogin() {
+    const email = document.getElementById('login-email').value;
+    const pass  = document.getElementById('login-password').value;
+    const err   = document.getElementById('login-error');
+    err.style.display = 'none';
+    try {
+      const res = await fetch(`${API}/login/access-token`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `username=${encodeURIComponent(email)}&password=${encodeURIComponent(pass)}`
+      });
+      if (!res.ok) { err.textContent = 'Invalid credentials.'; err.style.display = 'block'; return; }
+      const d = await res.json();
+      token = d.access_token;
+      localStorage.setItem('ap_token', token);
+      updateAuthUI(email);
+      showSection('dashboard', document.querySelector('.nav-item'));
+    } catch(e) {
+      err.textContent = 'Connection error: ' + e.message;
+      err.style.display = 'block';
+    }
+  }
+
+  function logout() {
+    token = '';
+    localStorage.removeItem('ap_token');
+    updateAuthUI(null);
+  }
+
+  function updateAuthUI(email) {
+    const s = document.getElementById('auth-status');
+    const lb = document.getElementById('login-btn');
+    const lo = document.getElementById('logout-btn');
+    if (email) {
+      s.textContent = '✓ ' + email;
+      s.style.color = '#3fb950';
+      lb.style.display = 'none';
+      lo.style.display = '';
+    } else {
+      s.textContent = 'Not logged in';
+      s.style.color = '#8b949e';
+      lb.style.display = '';
+      lo.style.display = 'none';
+    }
+  }
+
+  function headers() { return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }; }
+
+  // ── Dashboard ──
+  async function loadDashboard() {
+    // Health
+    try {
+      const r = await fetch(`${API}/utils/health-check/`);
+      const ok = r.ok;
+      document.getElementById('stat-health').textContent = ok ? '✓' : '✗';
+      document.getElementById('stat-health-sub').textContent = ok ? 'Healthy' : 'Error';
+    } catch { document.getElementById('stat-health').textContent = '✗'; document.getElementById('stat-health-sub').textContent = 'Unreachable'; }
+
+    if (!token) return;
+
+    // Items
+    try {
+      const r = await fetch(`${API}/items/?limit=100`, { headers: headers() });
+      if (r.ok) {
+        const d = await r.json();
+        const count = d.count ?? d.data?.length ?? 0;
+        document.getElementById('stat-items').textContent = count;
+        document.getElementById('stat-items-sub').textContent = count === 1 ? '1 item' : `${count} items`;
+        renderDashboardItems(d.data || []);
+      }
+    } catch {}
+
+    // Users
+    try {
+      const r = await fetch(`${API}/users/?limit=100`, { headers: headers() });
+      if (r.ok) {
+        const d = await r.json();
+        const count = d.count ?? d.data?.length ?? 0;
+        document.getElementById('stat-users').textContent = count;
+        document.getElementById('stat-users-sub').textContent = count === 1 ? '1 user' : `${count} users`;
+      }
+    } catch {}
+  }
+
+  function renderDashboardItems(items) {
+    const tb = document.getElementById('items-tbody');
+    if (!items.length) { tb.innerHTML = '<tr><td colspan="5" style="color:#8b949e;text-align:center;padding:24px">No items yet</td></tr>'; return; }
+    tb.innerHTML = items.slice(0, 10).map(it => `
+      <tr>
+        <td style="font-family:monospace;color:#8b949e;font-size:12px">${it.id.slice(0,8)}…</td>
+        <td style="font-weight:500">${esc(it.title)}</td>
+        <td style="color:#8b949e">${esc(it.description||'—')}</td>
+        <td><span class="badge badge-blue">${esc(it.owner_id?.slice(0,6)||'?')}…</span></td>
+        <td><span class="badge badge-green">Active</span></td>
+      </tr>`).join('');
+  }
+
+  // ── Items ──
+  async function loadFullItems() {
+    if (!token) return;
+    const tb = document.getElementById('items-full-tbody');
+    tb.innerHTML = '<tr><td colspan="4" style="color:#8b949e;text-align:center;padding:24px"><span class="spinner"></span> Loading…</td></tr>';
+    try {
+      const r = await fetch(`${API}/items/?limit=100`, { headers: headers() });
+      if (!r.ok) { tb.innerHTML = '<tr><td colspan="4" style="color:#f85149;text-align:center;padding:24px">Failed to load</td></tr>'; return; }
+      const d = await r.json();
+      const items = d.data || [];
+      if (!items.length) { tb.innerHTML = '<tr><td colspan="4" style="color:#8b949e;text-align:center;padding:24px">No items yet. Create one!</td></tr>'; return; }
+      tb.innerHTML = items.map(it => `
+        <tr>
+          <td style="font-family:monospace;color:#8b949e;font-size:12px">${it.id.slice(0,8)}…</td>
+          <td style="font-weight:500">${esc(it.title)}</td>
+          <td style="color:#8b949e">${esc(it.description||'—')}</td>
+          <td><button class="btn" style="font-size:12px;padding:4px 10px;color:#f85149" onclick="deleteItem('${it.id}')">Delete</button></td>
+        </tr>`).join('');
+    } catch(e) { tb.innerHTML = `<tr><td colspan="4" style="color:#f85149;text-align:center;padding:24px">${e.message}</td></tr>`; }
+  }
+
+  function showCreateItem() {
+    document.getElementById('create-item-form').style.display = 'block';
+    document.getElementById('new-item-title').focus();
+  }
+
+  async function createItem() {
+    const title = document.getElementById('new-item-title').value.trim();
+    const desc  = document.getElementById('new-item-desc').value.trim();
+    if (!title) return;
+    try {
+      await fetch(`${API}/items/`, { method:'POST', headers: headers(), body: JSON.stringify({title, description: desc||null}) });
+      document.getElementById('create-item-form').style.display = 'none';
+      document.getElementById('new-item-title').value = '';
+      document.getElementById('new-item-desc').value = '';
+      loadFullItems();
+    } catch(e) { alert('Error: ' + e.message); }
+  }
+
+  async function deleteItem(id) {
+    if (!confirm('Delete this item?')) return;
+    try {
+      await fetch(`${API}/items/${id}`, { method:'DELETE', headers: headers() });
+      loadFullItems();
+    } catch(e) { alert('Error: ' + e.message); }
+  }
+
+  // ── Users ──
+  async function loadUsers() {
+    if (!token) return;
+    const tb = document.getElementById('users-tbody');
+    tb.innerHTML = '<tr><td colspan="5" style="color:#8b949e;text-align:center;padding:24px"><span class="spinner"></span> Loading…</td></tr>';
+    try {
+      const r = await fetch(`${API}/users/?limit=100`, { headers: headers() });
+      if (!r.ok) { tb.innerHTML = '<tr><td colspan="5" style="color:#f85149;text-align:center;padding:24px">Failed to load</td></tr>'; return; }
+      const d = await r.json();
+      const users = d.data || [];
+      if (!users.length) { tb.innerHTML = '<tr><td colspan="5" style="color:#8b949e;text-align:center;padding:24px">No users</td></tr>'; return; }
+      tb.innerHTML = users.map(u => `
+        <tr>
+          <td style="font-family:monospace;color:#8b949e;font-size:12px">${u.id.slice(0,8)}…</td>
+          <td>${esc(u.email)}</td>
+          <td style="color:#8b949e">${esc(u.full_name||'—')}</td>
+          <td>${u.is_superuser ? '<span class="badge badge-blue">Superuser</span>' : '<span class="badge badge-gray">User</span>'}</td>
+          <td>${u.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-gray">Inactive</span>'}</td>
+        </tr>`).join('');
+    } catch(e) { tb.innerHTML = `<tr><td colspan="5" style="color:#f85149;text-align:center;padding:24px">${e.message}</td></tr>`; }
+  }
+
+  // ── AI Chat ──
+  let apiKey = localStorage.getItem('ap_apikey') || '';
+  document.getElementById('api-key-input').value = apiKey;
+
+  function saveKey(v) { apiKey = v; localStorage.setItem('ap_apikey', v); }
+  function toggleKey() {
+    const inp = document.getElementById('api-key-input');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  const msgs = [];
+
+  async function sendMessage() {
+    const inp = document.getElementById('chat-input');
+    const text = inp.value.trim();
+    if (!text) return;
+    if (!apiKey) { alert('Please enter your Anthropic API key first.'); return; }
+
+    inp.value = '';
+    const btn = document.getElementById('send-btn');
+    btn.disabled = true;
+
+    // Add user message
+    msgs.push({ role: 'user', content: text });
+    appendMsg('user', text);
+
+    // AI placeholder
+    const aiDiv = appendMsg('ai', '');
+    const aiText = aiDiv.querySelector('.msg-text');
+    aiText.innerHTML = '<span class="spinner"></span>';
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-opus-4-6',
+          max_tokens: 1024,
+          system: 'You are a helpful assistant for the Action Platform, a FastAPI-based web application for managing items and users. Be concise and practical.',
+          messages: msgs
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        aiText.textContent = '⚠ ' + (err.error?.message || res.statusText);
+        msgs.pop();
+        return;
+      }
+
+      const d = await res.json();
+      const reply = d.content?.[0]?.text || '(empty)';
+      aiText.textContent = reply;
+      msgs.push({ role: 'assistant', content: reply });
+    } catch(e) {
+      aiText.textContent = '⚠ ' + e.message;
+      msgs.pop();
+    } finally {
+      btn.disabled = false;
+      inp.focus();
+    }
+  }
+
+  function appendMsg(role, text) {
+    const container = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
+    div.innerHTML = `
+      <div class="msg-avatar ${role}">${role === 'user' ? '👤' : '🤖'}</div>
+      <div class="msg-body">
+        <div class="msg-name">${role === 'user' ? 'You' : 'Claude'}</div>
+        <div class="msg-text">${esc(text)}</div>
+      </div>`;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return div;
+  }
+
+  function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Init ──
+  (async function init() {
+    if (token) {
+      try {
+        const r = await fetch(`${API}/login/test-token`, { method:'POST', headers: headers() });
+        if (r.ok) {
+          const u = await r.json();
+          updateAuthUI(u.email);
+          loadDashboard();
+          return;
+        }
+      } catch {}
+      token = '';
+      localStorage.removeItem('ap_token');
+    }
+    loadDashboard(); // loads health even without auth
+  })();
+</script>
+</body>
+</html>
