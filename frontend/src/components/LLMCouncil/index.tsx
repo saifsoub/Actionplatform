@@ -1,72 +1,78 @@
 import { useState, useRef, useEffect } from "react"
 
+// ── Named agent profiles ────────────────────────────────────────────────────
 const M = {
-  strategist: {
-    name: "The Strategist",
-    emoji: "🎯",
+  atlas: {
+    name: "Atlas",
+    emoji: "🌐",
     color: "#00D4FF",
-    role: "Strategic Systems Thinker",
-    bg: "rgba(0,212,255,.08)",
-    border: "rgba(0,212,255,.28)",
+    role: "Strategic Advisor",
+    bg: "rgba(0,212,255,.07)",
+    border: "rgba(0,212,255,.25)",
+    tagline: "Global Systems Thinker",
     r: [
-      "The core strategic question isn't what you're asking — it's why this problem exists at all. Map the system: who benefits from the current state, and what's the switching cost? Your move should create asymmetric leverage, not incremental improvement. Position first, execute second.",
-      "Before committing resources, validate your riskiest assumption with the cheapest possible experiment. The opportunity cost of being right slowly is far less than being confidently wrong. What's your 18-month moat if this works?",
-      "Three scenarios: best case, realistic case, and the one nobody talks about — what if nothing changes? The status quo has inertia you're underestimating. Your strategy needs to work even if adoption is 30% of projections.",
-      "Positioning precedes product. Define what you are not before you define what you are. The clearest strategic wins come from ruthless subtraction, not addition.",
+      "The real question isn't what you're solving — it's why this problem persists at all. Map the incentive structures: who profits from the status quo, and what switching costs protect them? Your best move creates asymmetric leverage, not incremental improvement. Position before you execute.",
+      "Before committing capital or time, stress-test your riskiest assumption with the cheapest possible signal. I've seen too many brilliant strategies collapse at first contact with reality. What experiment could you run this week that would either kill this idea or make it bulletproof?",
+      "You're looking at three futures: the optimistic case you're planning for, the realistic case you'll actually face, and the silent one — where nothing changes and the status quo wins by default. That third scenario carries more weight than you're giving it. How does your approach hold up when adoption is 40% of your projection?",
+      "The clearest strategic wins always come from ruthless subtraction, not addition. Define what you refuse to be before you define what you are. The companies that dominate their space do one thing so well that alternatives feel like compromises.",
     ],
   },
-  visionary: {
-    name: "The Visionary",
-    emoji: "🔮",
-    color: "#B14FFF",
-    role: "Creative Ideator",
-    bg: "rgba(177,79,255,.08)",
-    border: "rgba(177,79,255,.28)",
+  nova: {
+    name: "Nova",
+    emoji: "✨",
+    color: "#C96FFF",
+    role: "Creative Visionary",
+    bg: "rgba(201,111,255,.07)",
+    border: "rgba(201,111,255,.25)",
+    tagline: "Sees What Others Miss",
     r: [
-      "What if you inverted the whole problem — instead of solving for X, what if X solving for you was the actual product? The most interesting companies didn't compete in existing categories, they made their category irrelevant. What's the version of this that surprises even you?",
-      "There's a deeper human truth hiding underneath this question. Strip away the technical framing — what does someone actually feel when this works perfectly? Design for that feeling, and the features will reveal themselves.",
-      "I'm drawn to the tension here. The friction you're experiencing isn't a bug — it's the exact signal pointing toward the real breakthrough. Lean into the constraint; the constraint is the concept.",
-      "The most powerful moves borrow from adjacent domains. What would a game designer do here? A filmmaker? A city planner? The answer you need probably already exists somewhere — just not in your industry.",
+      "What if you inverted the whole framing? Instead of solving the problem for users, what if the product solved itself — and users were the medium, not the audience? The most disruptive companies didn't compete in existing categories; they made their category irrelevant. What's the version of this that surprises even you?",
+      "There's a deeper human emotion underneath this challenge that nobody's naming. Strip away the technical framing — what does someone feel in the moment this works perfectly? Design backwards from that feeling. When you nail the emotion, the features reveal themselves like inevitabilities.",
+      "I keep seeing the same pattern: the friction you're fighting isn't a bug — it's the signal pointing to the real breakthrough. The constraint is the concept. The most elegant solutions in history were born from the exact limitations people were trying to escape.",
+      "Borrow from an adjacent world. What would a jazz musician do here? A city planner? A marine biologist? The answer you need almost certainly exists somewhere — just in a domain nobody's thought to look. Cross-pollination is underrated as a strategy.",
     ],
   },
-  critic: {
-    name: "The Critic",
+  reza: {
+    name: "Reza",
     emoji: "⚡",
-    color: "#FF4F6A",
-    role: "Devil's Advocate",
-    bg: "rgba(255,79,106,.08)",
-    border: "rgba(255,79,106,.28)",
+    color: "#FF5A6A",
+    role: "Critical Analyst",
+    bg: "rgba(255,90,106,.07)",
+    border: "rgba(255,90,106,.25)",
+    tagline: "Makes Ideas Survive Reality",
     r: [
-      "The assumption I'd stress-test first: that the people who need this actually want it. There's a graveyard of elegant solutions to problems people tolerated just fine. Who specifically has told you this is painful enough to change behavior?",
-      "You're solving for visibility, but the real bottleneck is probably adoption. Even if you build it perfectly, what's the theory of change that gets people to use it consistently? 'Build it and they'll come' is not a theory.",
-      "I'll name the elephant: this depends on things outside your control. External dependencies are fine, but you need a Plan B that works even if the API changes, the partner walks, or the regulation shifts. Where's the hedge?",
-      "Be honest about the timeline. Every ambitious plan runs 2–3× longer than expected. If your model breaks at month 6 with no revenue, this dies. Compress everything to its minimum viable version first.",
+      "The assumption I'd challenge first: that the people who need this actually want it. There's a graveyard full of elegant solutions to problems people were tolerating just fine. Who has told you this is painful enough to change their behavior — not in a survey, but in a real conversation where they paid attention and leaned forward?",
+      "Here's what nobody's saying out loud: the real bottleneck isn't building the solution, it's getting enough people to use it consistently. Even a perfect product dies without a credible theory of adoption. 'Build it and they'll come' has never been a strategy. What's your actual mechanism for behavior change?",
+      "Let me name the dependency nobody's talking about: this works if a third party cooperates — an API, a partner, a regulation, a platform. External dependencies are legitimate risks, not footnotes. What's your contingency if the key dependency shifts, breaks, or walks away?",
+      "Be honest about your timeline and burn rate. Every ambitious plan runs 2–3× longer than expected. If your model breaks at month 6 with no revenue and no traction, this project doesn't survive. Compress everything to the minimum viable version first — then build up from proof, not aspiration.",
     ],
   },
-  builder: {
-    name: "The Builder",
+  kai: {
+    name: "Kai",
     emoji: "🛠️",
-    color: "#00FF8C",
-    role: "Practical Executor",
-    bg: "rgba(0,255,140,.08)",
-    border: "rgba(0,255,140,.28)",
+    color: "#00FF9C",
+    role: "Execution Lead",
+    bg: "rgba(0,255,156,.07)",
+    border: "rgba(0,255,156,.25)",
+    tagline: "Builder & Pragmatist",
     r: [
-      "Skip the full build — what's the smallest thing you could put in front of a real user this week? An hour of testing beats a month of theorizing. If you can't demo something in 7 days, the scope is still too large.",
-      "Before architecture decisions, nail the core user flow end-to-end, even if it's mostly manual. Automate the bottlenecks after you know which ones actually hurt. Tech debt on features nobody uses is worse than no tech at all.",
-      "Two concrete next actions: one you can do today, one that unblocks everything for next week. Everything else is planning theater. What's actually blocking you right now, specifically?",
-      "Ship the ugly version. Perfection is a delay tactic. The feedback you get from a rough v1 in 10 days is worth more than the elegant v2 you launch in 3 months.",
+      "Cut everything and ask: what's the smallest thing you could put in front of a real user this week? Not a mockup — something that actually works, even if it's ugly and mostly manual. One hour of watching a real person use it beats a month of internal theorizing. If you can't demo it in 7 days, the scope is still too big.",
+      "Don't touch the architecture until you've nailed the core user flow end-to-end, even if half of it is you doing things manually behind the scenes. Automate the bottlenecks only after you know which ones actually cause pain. Tech debt on features nobody uses is worse than no tech at all.",
+      "Give me two concrete next actions: one you can do before noon today, and one that unblocks everything for next week. Everything else is planning theater. Name the single specific thing that's actually blocking forward motion right now — not in general, but specifically.",
+      "Ship the ugly version. Perfection is a delay tactic dressed up as quality control. The feedback you get from a rough v1 live in 10 days is worth more than the polished v2 you launch in 3 months. Market response is the only signal that matters — everything else is speculation.",
     ],
   },
 }
 
-const ORDER = ["strategist", "visionary", "critic", "builder"] as const
+const ORDER = ["atlas", "nova", "reza", "kai"] as const
 type AgentId = (typeof ORDER)[number]
 
+// ── Compelling mock synthesis responses ─────────────────────────────────────
 const SYNTH = [
-  "The council converges on one thing: validate your core assumption this week with the smallest possible test before any architecture or strategy decisions lock you in. Real user feedback beats internal conviction every time.",
-  "Despite different lenses, the council agrees: the bottleneck is not the idea, it's the first honest signal from the market. Strip the plan to its minimum, ship it ugly, and let reality do the editing.",
-  "The synthesis is clear: there's a fatal assumption hiding underneath this challenge that nobody has tested yet. Until that assumption is proven or killed, everything else is premature. One week, one test, one answer.",
-  "The council's verdict: stop planning, start probing. Leverage, boldness, evidence, action — all four agents point to the same first step: get it in front of a real person today.",
+  "The council is unanimous on one thing: the fastest path forward is a single, cheap, real-world test run this week — before any architecture decisions, strategy pivots, or resource commitments. Every perspective points to the same bottleneck: an untested core assumption that's holding the entire plan hostage.",
+  "Despite different lenses, Atlas, Nova, Reza, and Kai converge on a shared truth: the bottleneck isn't the idea or the build — it's the first honest signal from the market. Strip everything to its minimum, ship it in days, and let reality edit the roadmap. Internal conviction without external validation is just expensive storytelling.",
+  "The council's consensus is stark: there's a hidden assumption underneath this challenge that nobody has actually tested yet. Until that assumption is either confirmed or killed, everything downstream is premature. One conversation, one prototype, one week — that's the only move that changes the probability of success.",
+  "Four advisors, one verdict: stop planning, start probing. The leverage point, the creative inversion, the critical risk, and the next action all point to the same first step — get this in front of a real person today, before refining anything. Speed of learning beats quality of planning every time.",
 ]
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -87,8 +93,10 @@ export default function LLMCouncil() {
   const [loading, setLoading] = useState(false)
   const [round, setRound] = useState(0)
   const [spoke, setSpoke] = useState<Record<string, boolean>>({})
+  const [usingAI, setUsingAI] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const roundRef = useRef(0)
+  const sessionQuestionRef = useRef("")
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -97,23 +105,50 @@ export default function LLMCouncil() {
   async function runRound() {
     setLoading(true)
     const r = roundRef.current
+    const q = sessionQuestionRef.current
+
+    // ── Try real API ──────────────────────────────────────────────────────────
+    let agentResponses: Record<string, string> | null = null
+    let synthResponse: string | null = null
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL ?? ""
+      const token = localStorage.getItem("access_token")
+      const res = await fetch(`${apiUrl}/api/v1/council/query`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question: q, round: r }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        agentResponses = data.responses as Record<string, string>
+        synthResponse = data.synthesis as string
+        setUsingAI(true)
+      }
+    } catch {
+      // Network error — fall through to mock
+    }
+
+    // ── Sequential display (real or mock) ───────────────────────────────────
     setTyping(ORDER[0])
     for (let i = 0; i < ORDER.length; i++) {
       const id = ORDER[i]
-      await sleep(950 + Math.random() * 750)
+      await sleep(900 + Math.random() * 700)
       setTyping(null)
-      setMessages((prev) => [
-        ...prev,
-        { id: Math.random(), agent: id, text: M[id].r[r % M[id].r.length], round: r },
-      ])
+      const text = agentResponses?.[id] ?? M[id].r[r % M[id].r.length]
+      setMessages((prev) => [...prev, { id: Math.random(), agent: id, text, round: r }])
       setSpoke((prev) => ({ ...prev, [id]: true }))
       if (i < ORDER.length - 1) {
-        await sleep(160)
+        await sleep(150)
         setTyping(ORDER[i + 1])
       }
     }
+
     await sleep(600)
-    setSynthesis(SYNTH[r % SYNTH.length])
+    setSynthesis(synthResponse ?? SYNTH[r % SYNTH.length])
     roundRef.current = r + 1
     setRound(r + 1)
     setLoading(false)
@@ -122,10 +157,12 @@ export default function LLMCouncil() {
 
   async function convene() {
     if (loading || !question.trim()) return
+    sessionQuestionRef.current = question
     setSession({ question })
     setMessages([])
     setSynthesis("")
     setSpoke({})
+    setUsingAI(false)
     roundRef.current = 0
     setRound(0)
     await runRound()
@@ -134,6 +171,7 @@ export default function LLMCouncil() {
   async function anotherRound() {
     if (loading) return
     setSpoke({})
+    setSynthesis("")
     await runRound()
   }
 
@@ -145,8 +183,10 @@ export default function LLMCouncil() {
     setTyping(null)
     setLoading(false)
     setSpoke({})
+    setUsingAI(false)
     roundRef.current = 0
     setRound(0)
+    sessionQuestionRef.current = ""
   }
 
   const roundGroups = messages.reduce(
@@ -190,7 +230,7 @@ export default function LLMCouncil() {
               width: 32,
               height: 32,
               borderRadius: 9,
-              background: "linear-gradient(135deg,rgba(0,212,255,.2),rgba(177,79,255,.2))",
+              background: "linear-gradient(135deg,rgba(0,212,255,.2),rgba(201,111,255,.2))",
               border: "1px solid rgba(255,255,255,.12)",
               display: "flex",
               alignItems: "center",
@@ -201,23 +241,55 @@ export default function LLMCouncil() {
             ⚖️
           </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: "-.3px" }}>LLM Council</div>
+            <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: "-.3px" }}>
+              The Council
+            </div>
             <div style={{ fontSize: 8, color: "#555", letterSpacing: "1px" }}>
-              MULTI-AGENT DELIBERATION
+              AI ADVISOR PANEL
             </div>
           </div>
         </div>
-        <div style={{ fontSize: 9, color: "#252535" }}>Seif Alsoub · FTA UAE</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {usingAI && (
+            <div
+              style={{
+                fontSize: 8,
+                color: "#00FF9C",
+                letterSpacing: ".8px",
+                padding: "3px 8px",
+                border: "1px solid rgba(0,255,156,.25)",
+                borderRadius: 20,
+                background: "rgba(0,255,156,.06)",
+              }}
+            >
+              ● AI POWERED
+            </div>
+          )}
+          {!usingAI && session && (
+            <div
+              style={{
+                fontSize: 8,
+                color: "#555",
+                letterSpacing: ".8px",
+                padding: "3px 8px",
+                border: "1px solid rgba(255,255,255,.06)",
+                borderRadius: 20,
+              }}
+            >
+              DEMO MODE
+            </div>
+          )}
+        </div>
       </div>
 
-      <div style={{ maxWidth: 780, margin: "0 auto", padding: "22px 16px 60px" }}>
-        {/* Member Cards */}
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "22px 16px 80px" }}>
+        {/* Agent Cards */}
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(4,1fr)",
-            gap: 7,
-            marginBottom: 22,
+            gap: 8,
+            marginBottom: 24,
           }}
         >
           {ORDER.map((id) => {
@@ -227,19 +299,19 @@ export default function LLMCouncil() {
               <div
                 key={id}
                 style={{
-                  padding: "12px 10px",
-                  borderRadius: 11,
+                  padding: "14px 12px",
+                  borderRadius: 12,
                   background: m.bg,
                   border: `1px solid ${isTyping ? m.color : m.border}`,
-                  boxShadow: isTyping ? `0 0 20px ${m.color}28` : "none",
+                  boxShadow: isTyping ? `0 0 24px ${m.color}22` : "none",
                   transition: "all .3s",
                 }}
               >
-                <div style={{ fontSize: 18, marginBottom: 5 }}>{m.emoji}</div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: m.color, marginBottom: 2 }}>
+                <div style={{ fontSize: 20, marginBottom: 6 }}>{m.emoji}</div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: m.color, marginBottom: 1 }}>
                   {m.name}
                 </div>
-                <div style={{ fontSize: 8, color: "#555", lineHeight: 1.3 }}>{m.role}</div>
+                <div style={{ fontSize: 8, color: "#444", lineHeight: 1.35 }}>{m.tagline}</div>
                 {spoke[id] && !isTyping && (
                   <div
                     style={{
@@ -247,13 +319,13 @@ export default function LLMCouncil() {
                       height: 5,
                       borderRadius: "50%",
                       background: m.color,
-                      opacity: 0.7,
-                      marginTop: 6,
+                      opacity: 0.6,
+                      marginTop: 7,
                     }}
                   />
                 )}
                 {isTyping && (
-                  <div style={{ display: "flex", gap: 3, marginTop: 6 }}>
+                  <div style={{ display: "flex", gap: 3, marginTop: 7 }}>
                     {[0, 1, 2].map((i) => (
                       <div
                         key={i}
@@ -280,12 +352,12 @@ export default function LLMCouncil() {
               background: "rgba(255,255,255,.025)",
               border: "1px solid rgba(255,255,255,.07)",
               borderRadius: 14,
-              padding: 18,
-              marginBottom: 18,
+              padding: 20,
+              marginBottom: 20,
             }}
           >
-            <div style={{ fontSize: 9, color: "#444", letterSpacing: ".9px", marginBottom: 9 }}>
-              BRING YOUR QUESTION TO THE COUNCIL
+            <div style={{ fontSize: 9, color: "#444", letterSpacing: ".9px", marginBottom: 10 }}>
+              BRING YOUR CHALLENGE TO THE COUNCIL
             </div>
             <textarea
               value={question}
@@ -293,7 +365,7 @@ export default function LLMCouncil() {
               onKeyDown={(e) => {
                 if ((e.metaKey || e.ctrlKey) && e.key === "Enter") convene()
               }}
-              placeholder="What decision, challenge, or idea should the council deliberate on?"
+              placeholder="What decision, strategy, or challenge should Atlas, Nova, Reza, and Kai deliberate on?"
               rows={4}
               style={{
                 width: "100%",
@@ -305,6 +377,7 @@ export default function LLMCouncil() {
                 lineHeight: 1.7,
                 resize: "none",
                 fontFamily: "inherit",
+                boxSizing: "border-box",
               }}
             />
             <div
@@ -322,11 +395,11 @@ export default function LLMCouncil() {
                 onClick={convene}
                 disabled={!question.trim()}
                 style={{
-                  padding: "9px 20px",
+                  padding: "9px 22px",
                   borderRadius: 8,
                   border: "none",
                   background: question.trim()
-                    ? "linear-gradient(135deg,#00D4FF,#B14FFF)"
+                    ? "linear-gradient(135deg,#00D4FF,#C96FFF)"
                     : "rgba(255,255,255,.05)",
                   color: question.trim() ? "#000" : "#333",
                   fontSize: 11,
@@ -334,6 +407,7 @@ export default function LLMCouncil() {
                   cursor: question.trim() ? "pointer" : "not-allowed",
                   letterSpacing: ".4px",
                   fontFamily: "inherit",
+                  transition: "all .2s",
                 }}
               >
                 CONVENE COUNCIL →
@@ -342,15 +416,15 @@ export default function LLMCouncil() {
           </div>
         )}
 
-        {/* Session banner */}
+        {/* Session Banner */}
         {session && (
           <div
             style={{
               background: "rgba(255,255,255,.02)",
               border: "1px solid rgba(255,255,255,.06)",
               borderRadius: 10,
-              padding: "11px 14px",
-              marginBottom: 16,
+              padding: "12px 14px",
+              marginBottom: 18,
               display: "flex",
               alignItems: "flex-start",
               justifyContent: "space-between",
@@ -358,15 +432,20 @@ export default function LLMCouncil() {
             }}
           >
             <div>
-              <div style={{ fontSize: 8, color: "#333", letterSpacing: ".8px", marginBottom: 3 }}>
+              <div style={{ fontSize: 8, color: "#333", letterSpacing: ".8px", marginBottom: 4 }}>
                 DELIBERATING ON
               </div>
               <div style={{ fontSize: 12, color: "#999", lineHeight: 1.5 }}>{session.question}</div>
+              {round > 0 && (
+                <div style={{ fontSize: 8, color: "#333", marginTop: 4 }}>
+                  Round {round} complete
+                </div>
+              )}
             </div>
             <button
               onClick={reset}
               style={{
-                padding: "4px 11px",
+                padding: "4px 12px",
                 borderRadius: 6,
                 border: "1px solid rgba(255,255,255,.07)",
                 background: "transparent",
@@ -374,6 +453,7 @@ export default function LLMCouncil() {
                 fontSize: 9,
                 cursor: "pointer",
                 fontFamily: "inherit",
+                whiteSpace: "nowrap",
               }}
             >
               New ↺
@@ -381,17 +461,17 @@ export default function LLMCouncil() {
           </div>
         )}
 
-        {/* Round groups */}
+        {/* Round Groups */}
         {Object.entries(roundGroups).map(([r, msgs]) => (
           <div key={r}>
             {parseInt(r) > 0 && (
-              <div style={{ textAlign: "center", margin: "16px 0 12px" }}>
+              <div style={{ textAlign: "center", margin: "18px 0 14px" }}>
                 <span
                   style={{
                     fontSize: 8,
                     color: "#252535",
                     letterSpacing: "1.2px",
-                    padding: "3px 12px",
+                    padding: "3px 14px",
                     border: "1px solid rgba(255,255,255,.04)",
                     borderRadius: 20,
                   }}
@@ -407,8 +487,8 @@ export default function LLMCouncil() {
                   <div
                     key={msg.id}
                     style={{
-                      borderRadius: 11,
-                      padding: "13px 15px",
+                      borderRadius: 12,
+                      padding: "14px 16px",
                       background: m.bg,
                       border: `1px solid ${m.border}`,
                       animation: "rise .35s ease",
@@ -418,17 +498,17 @@ export default function LLMCouncil() {
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: 6,
-                        marginBottom: 8,
+                        gap: 7,
+                        marginBottom: 9,
                       }}
                     >
-                      <span style={{ fontSize: 13 }}>{m.emoji}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: m.color }}>
+                      <span style={{ fontSize: 14 }}>{m.emoji}</span>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: m.color }}>
                         {m.name}
                       </span>
-                      <span style={{ fontSize: 8, color: "#3a3a4a", marginLeft: 2 }}>{m.role}</span>
+                      <span style={{ fontSize: 8, color: "#333", marginLeft: 1 }}>{m.role}</span>
                     </div>
-                    <div style={{ fontSize: 12, lineHeight: 1.8, color: "#B8BDD0" }}>
+                    <div style={{ fontSize: 12.5, lineHeight: 1.85, color: "#B8BDD0" }}>
                       {msg.text}
                     </div>
                   </div>
@@ -442,26 +522,24 @@ export default function LLMCouncil() {
         {synthesis && (
           <div
             style={{
-              background:
-                "linear-gradient(135deg,rgba(0,212,255,.05),rgba(177,79,255,.05))",
+              background: "linear-gradient(135deg,rgba(0,212,255,.05),rgba(201,111,255,.05))",
               border: "1px solid rgba(255,255,255,.1)",
-              borderRadius: 11,
-              padding: "14px 16px",
-              marginTop: 4,
+              borderRadius: 12,
+              padding: "16px 18px",
+              marginTop: 6,
+              animation: "rise .4s ease",
             }}
           >
-            <div
-              style={{ fontSize: 8, color: "#666", letterSpacing: "1px", marginBottom: 7 }}
-            >
+            <div style={{ fontSize: 8, color: "#666", letterSpacing: "1px", marginBottom: 8 }}>
               ⚖️ COUNCIL SYNTHESIS
             </div>
-            <div style={{ fontSize: 12, lineHeight: 1.8, color: "#CDD2E4", fontStyle: "italic" }}>
+            <div style={{ fontSize: 13, lineHeight: 1.85, color: "#CDD2E4", fontStyle: "italic" }}>
               {synthesis}
             </div>
           </div>
         )}
 
-        {/* Thinking */}
+        {/* Typing indicator */}
         {typing && messages.length > 0 && (
           <div style={{ padding: "8px 14px", opacity: 0.5 }}>
             <span style={{ fontSize: 10, color: M[typing]?.color }}>
@@ -475,15 +553,15 @@ export default function LLMCouncil() {
           <div
             style={{
               display: "flex",
-              gap: 9,
+              gap: 10,
               justifyContent: "center",
-              marginTop: 18,
+              marginTop: 20,
             }}
           >
             <button
               onClick={anotherRound}
               style={{
-                padding: "9px 20px",
+                padding: "10px 22px",
                 borderRadius: 9,
                 border: "1px solid rgba(0,212,255,.3)",
                 background: "rgba(0,212,255,.07)",
@@ -492,6 +570,7 @@ export default function LLMCouncil() {
                 fontWeight: 600,
                 cursor: "pointer",
                 fontFamily: "inherit",
+                transition: "all .2s",
               }}
             >
               ↻ Another Round
@@ -499,7 +578,7 @@ export default function LLMCouncil() {
             <button
               onClick={reset}
               style={{
-                padding: "9px 18px",
+                padding: "10px 20px",
                 borderRadius: 9,
                 border: "1px solid rgba(255,255,255,.07)",
                 background: "transparent",
@@ -520,7 +599,7 @@ export default function LLMCouncil() {
       <style>{`
         @keyframes rise { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
         @keyframes pulse { 0%,100%{opacity:.2;transform:scale(.8)} 50%{opacity:1;transform:scale(1.3)} }
-        textarea::placeholder { color: #1a1c28; }
+        textarea::placeholder { color: #1e2030; }
       `}</style>
     </div>
   )
