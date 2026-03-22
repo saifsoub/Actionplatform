@@ -1,8 +1,11 @@
 import asyncio
+import logging
 
 import anthropic as anthropic_sdk
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select
+
+logger = logging.getLogger(__name__)
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.config import settings
@@ -119,6 +122,7 @@ async def query_council(
     try:
         synthesis = await _call_agent(client, SYNTHESIS_PROMPT, synthesis_context)
     except anthropic_sdk.APIError as e:
+        logger.warning("Synthesis call failed, using fallback: %s", e)
         synthesis = "The council has spoken — validate your core assumption first."
 
     # ── Increment usage ──

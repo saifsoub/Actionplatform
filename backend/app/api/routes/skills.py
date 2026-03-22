@@ -1,7 +1,10 @@
+import json
+import logging
+import re
 import uuid
 
 import anthropic as anthropic_sdk
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
@@ -18,6 +21,8 @@ from app.models import (
     SkillUpdate,
 )
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/skills", tags=["skills"])
 
 
@@ -25,8 +30,8 @@ router = APIRouter(prefix="/skills", tags=["skills"])
 def list_skills(
     session: SessionDep,
     current_user: CurrentUser,
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=500),
 ) -> SkillsPublic:
     count = session.exec(
         select(func.count()).where(Skill.owner_id == current_user.id)
@@ -150,30 +155,39 @@ Respond in JSON format only:
             max_tokens=500,
             messages=[{"role": "user", "content": prompt}],
         )
-        import json
-        text = next((b.text for b in msg.content if hasattr(b, "text")), "{}")
-        # extract JSON from possible markdown code block
-        if "```" in text:
-            text = text.split("```")[1].lstrip("json").strip()
-        data = json.loads(text)
-        matched_ids = []
-        for uid in data.get("matched_agent_ids", []):
-            try:
-                matched_ids.append(uuid.UUID(str(uid)))
-            except ValueError:
-                pass
-        # auto-assign skill to matched agents
-        for aid in matched_ids:
-            existing = session.get(AgentSkillLink, {"agent_id": aid, "skill_id": skill_id})
-            if not existing:
-                session.add(AgentSkillLink(agent_id=aid, skill_id=skill_id))
-        session.commit()
-        return SkillMatchResult(
-            skill_id=skill_id,
-            skill_name=skill.name,
-            matched_agent_ids=matched_ids,
-            suggested_new_agent=bool(data.get("suggested_new_agent", False)),
-            reasoning=str(data.get("reasoning", "")),
-        )
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"AI matching error: {e}")
+    except anthropic_sdk.APIError as e:
+        logger.error("Anthropic API error during skill matching: %s", e)
+        raise HTTPException(status_code=502, detail="AI service unavailable")
+
+    text = next((b.text for b in msg.content if hasattr(b, "text")), "{}")
+
+    # Extract JSON from possible markdown code block (handles ```json ... ``` or bare JSON)
+    code_block = re.search(r"```(?:json)?\s*([\s\S]*?)```", text)
+    json_text = code_block.group(1).strip() if code_block else text.strip()
+
+    try:
+        data = json.loads(json_text)
+    except json.JSONDecodeError as e:
+        logger.error("Failed to parse AI skill-match response: %s\nRaw text: %s", e, text)
+        raise HTTPException(status_code=502, detail="AI returned unparseable response")
+
+    matched_ids: list[uuid.UUID] = []
+    for uid in data.get("matched_agent_ids", []):
+        try:
+            matched_ids.append(uuid.UUID(str(uid)))
+        except ValueError:
+            logger.warning("Skipping invalid UUID in AI skill-match response: %r", uid)
+
+    # auto-assign skill to matched agents
+    for aid in matched_ids:
+        existing = session.get(AgentSkillLink, {"agent_id": aid, "skill_id": skill_id})
+        if not existing:
+            session.add(AgentSkillLink(agent_id=aid, skill_id=skill_id))
+    session.commit()
+    return SkillMatchResult(
+        skill_id=skill_id,
+        skill_name=skill.name,
+        matched_agent_ids=matched_ids,
+        suggested_new_agent=bool(data.get("suggested_new_agent", False)),
+        reasoning=str(data.get("reasoning", "")),
+    )
