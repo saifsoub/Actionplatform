@@ -1,3 +1,4 @@
+import json
 import uuid
 
 import anthropic as anthropic_sdk
@@ -150,7 +151,6 @@ Respond in JSON format only:
             max_tokens=500,
             messages=[{"role": "user", "content": prompt}],
         )
-        import json
         text = next((b.text for b in msg.content if hasattr(b, "text")), "{}")
         # extract JSON from possible markdown code block
         if "```" in text:
@@ -175,5 +175,5 @@ Respond in JSON format only:
             suggested_new_agent=bool(data.get("suggested_new_agent", False)),
             reasoning=str(data.get("reasoning", "")),
         )
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"AI matching error: {e}")
+    except Exception:
+        raise HTTPException(status_code=502, detail="AI matching service temporarily unavailable")

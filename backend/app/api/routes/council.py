@@ -78,7 +78,7 @@ async def query_council(
 ) -> CouncilQueryResponse:
     # ── Check/create subscription ──
     sub = session.exec(
-        select(Subscription).where(Subscription.user_id == current_user.id)
+        select(Subscription).where(Subscription.user_id == current_user.id).with_for_update()
     ).first()
 
     if not sub:
@@ -104,8 +104,8 @@ async def query_council(
         results = await asyncio.gather(
             *[_call_agent(client, prompt, body.question) for prompt in AGENT_PROMPTS.values()]
         )
-    except anthropic_sdk.APIError as e:
-        raise HTTPException(status_code=502, detail=f"Upstream AI error: {e}")
+    except anthropic_sdk.APIError:
+        raise HTTPException(status_code=502, detail="AI service temporarily unavailable")
 
     responses = dict(zip(AGENT_PROMPTS.keys(), results))
 
@@ -118,7 +118,7 @@ async def query_council(
 
     try:
         synthesis = await _call_agent(client, SYNTHESIS_PROMPT, synthesis_context)
-    except anthropic_sdk.APIError as e:
+    except anthropic_sdk.APIError:
         synthesis = "The council has spoken — validate your core assumption first."
 
     # ── Increment usage ──
