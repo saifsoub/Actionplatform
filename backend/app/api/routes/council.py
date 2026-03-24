@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, timezone
 
 import anthropic as anthropic_sdk
 from fastapi import APIRouter, HTTPException
@@ -6,7 +7,14 @@ from sqlmodel import select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.config import settings
-from app.models import CouncilQueryRequest, CouncilQueryResponse, Subscription, SubscriptionTier
+from app.models import (
+    CouncilQueryRequest,
+    CouncilQueryResponse,
+    CouncilSession,
+    Subscription,
+    SubscriptionTier,
+    UserProfile,
+)
 
 router = APIRouter(prefix="/council", tags=["council"])
 
@@ -56,6 +64,29 @@ SYNTHESIS_PROMPT = (
 )
 
 
+def _build_profile_context(profile: UserProfile | None) -> str:
+    """Build a context prefix from the user's profile to personalize responses."""
+    if not profile:
+        return ""
+    parts = []
+    if profile.role:
+        parts.append(f"Role: {profile.role}")
+    if profile.domain:
+        parts.append(f"Domain/Industry: {profile.domain}")
+    if profile.biggest_challenge:
+        parts.append(f"Biggest challenge: {profile.biggest_challenge}")
+    if profile.goals:
+        parts.append(f"90-day goal: {profile.goals}")
+    if not parts:
+        return ""
+    today = datetime.now(timezone.utc).strftime("%B %d, %Y")
+    context = "\n".join(parts)
+    return (
+        f"[Context about this person — factor it into your response naturally, "
+        f"don't repeat it back verbatim]\nDate: {today}\n{context}\n\n"
+    )
+
+
 async def _call_agent(client: anthropic_sdk.AsyncAnthropic, system: str, question: str) -> str:
     msg = await client.messages.create(
         model="claude-opus-4-6",
@@ -98,11 +129,20 @@ async def query_council(
     if not settings.ANTHROPIC_API_KEY:
         raise HTTPException(status_code=503, detail="AI council not configured")
 
+    # ── Fetch user profile for personalization ──
+    profile = session.exec(
+        select(UserProfile).where(UserProfile.user_id == current_user.id)
+    ).first()
+    profile_ctx = _build_profile_context(profile)
+
+    # Prepend profile context to the question for each agent
+    personalized_question = f"{profile_ctx}{body.question}" if profile_ctx else body.question
+
     client = anthropic_sdk.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
     try:
         results = await asyncio.gather(
-            *[_call_agent(client, prompt, body.question) for prompt in AGENT_PROMPTS.values()]
+            *[_call_agent(client, prompt, personalized_question) for prompt in AGENT_PROMPTS.values()]
         )
     except anthropic_sdk.APIError as e:
         raise HTTPException(status_code=502, detail=f"Upstream AI error: {e}")
@@ -118,12 +158,29 @@ async def query_council(
 
     try:
         synthesis = await _call_agent(client, SYNTHESIS_PROMPT, synthesis_context)
-    except anthropic_sdk.APIError as e:
+    except anthropic_sdk.APIError:
         synthesis = "The council has spoken — validate your core assumption first."
+
+    # ── Persist session to DB ──
+    council_session = CouncilSession(
+        question=body.question,
+        atlas_response=responses.get("atlas", ""),
+        nova_response=responses.get("nova", ""),
+        reza_response=responses.get("reza", ""),
+        kai_response=responses.get("kai", ""),
+        synthesis=synthesis,
+        owner_id=current_user.id,
+    )
+    session.add(council_session)
 
     # ── Increment usage ──
     sub.sessions_used += 1
     session.add(sub)
     session.commit()
+    session.refresh(council_session)
 
-    return CouncilQueryResponse(responses=responses, synthesis=synthesis)
+    return CouncilQueryResponse(
+        responses=responses,
+        synthesis=synthesis,
+        session_id=council_session.id,
+    )

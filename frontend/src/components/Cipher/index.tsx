@@ -2,6 +2,100 @@ import { useState, useRef, useEffect } from "react"
 
 const CIPHER_SYSTEM = `You are Cipher — a sharp, no-nonsense crypto intelligence advisor. You speak with clarity and conviction, never hedging into uselessness. You understand on-chain dynamics, DeFi mechanics, market cycles, tokenomics, Web3 protocols, and macro correlations. You do not give financial advice — you help people think clearly about crypto markets and strategy. Keep responses to 3-5 focused sentences. No bullet points.`
 
+// ── Live price ticker ─────────────────────────────────────────────────────────
+interface PriceData {
+  btc: number | null
+  eth: number | null
+  sol: number | null
+  btc_change: number | null
+  eth_change: number | null
+  sol_change: number | null
+  fear_greed: number | null
+  fear_label: string
+}
+
+function useCryptoPrices(): PriceData {
+  const [data, setData] = useState<PriceData>({
+    btc: null, eth: null, sol: null,
+    btc_change: null, eth_change: null, sol_change: null,
+    fear_greed: null, fear_label: "",
+  })
+
+  useEffect(() => {
+    async function fetchPrices() {
+      try {
+        const [priceRes, fngRes] = await Promise.all([
+          fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true"),
+          fetch("https://api.alternative.me/fng/"),
+        ])
+        const priceJson = await priceRes.json()
+        const fngJson = await fngRes.json()
+        setData({
+          btc: priceJson.bitcoin?.usd ?? null,
+          eth: priceJson.ethereum?.usd ?? null,
+          sol: priceJson.solana?.usd ?? null,
+          btc_change: priceJson.bitcoin?.usd_24h_change ?? null,
+          eth_change: priceJson.ethereum?.usd_24h_change ?? null,
+          sol_change: priceJson.solana?.usd_24h_change ?? null,
+          fear_greed: fngJson.data?.[0]?.value ? Number(fngJson.data[0].value) : null,
+          fear_label: fngJson.data?.[0]?.value_classification ?? "",
+        })
+      } catch { /* network unavailable */ }
+    }
+    fetchPrices()
+    const interval = setInterval(fetchPrices, 60_000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return data
+}
+
+function PriceTicker() {
+  const d = useCryptoPrices()
+  const fmt = (n: number | null) => n == null ? "—" : `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+  const chg = (n: number | null) => n == null ? "" : `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`
+  const chgColor = (n: number | null) => n == null ? "#666" : n >= 0 ? "#00FF9C" : "#FF5A6A"
+  const fgColor = (v: number | null) => {
+    if (v == null) return "#666"
+    if (v <= 25) return "#FF5A6A"
+    if (v <= 45) return "#FFA500"
+    if (v <= 55) return "#FFD700"
+    return "#00FF9C"
+  }
+
+  return (
+    <div style={{
+      background: "rgba(255,215,0,.03)",
+      borderBottom: "1px solid rgba(255,215,0,.08)",
+      padding: "8px 24px",
+      display: "flex",
+      gap: "24px",
+      alignItems: "center",
+      overflowX: "auto",
+      fontSize: "11px",
+      flexWrap: "nowrap",
+    }}>
+      {[
+        { symbol: "BTC", price: d.btc, change: d.btc_change },
+        { symbol: "ETH", price: d.eth, change: d.eth_change },
+        { symbol: "SOL", price: d.sol, change: d.sol_change },
+      ].map(({ symbol, price, change }) => (
+        <div key={symbol} style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+          <span style={{ color: "#554400", fontWeight: "700" }}>{symbol}</span>
+          <span style={{ color: "#ccc", fontWeight: "600" }}>{fmt(price)}</span>
+          <span style={{ color: chgColor(change) }}>{chg(change)}</span>
+        </div>
+      ))}
+      <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+        <span style={{ color: "#554400" }}>Fear &amp; Greed</span>
+        <span style={{ color: fgColor(d.fear_greed), fontWeight: "700" }}>
+          {d.fear_greed != null ? `${d.fear_greed} · ${d.fear_label}` : "—"}
+        </span>
+      </div>
+    </div>
+  )
+}
+
 const STARTER_PROMPTS = [
   "What signals should I watch in a crypto bear market?",
   "How do I evaluate a new DeFi protocol for safety?",
@@ -145,6 +239,9 @@ export default function Cipher() {
           )}
         </div>
       </div>
+
+      {/* Live price ticker */}
+      <PriceTicker />
 
       {/* Messages */}
       <div style={{ flex: 1, maxWidth: 760, width: "100%", margin: "0 auto", padding: "24px 16px 100px" }}>

@@ -1,5 +1,13 @@
 import { useState, useEffect, useRef } from "react"
 
+interface UserProfile {
+  role: string | null
+  domain: string | null
+  biggest_challenge: string | null
+  goals: string | null
+  onboarding_complete: boolean
+}
+
 // ── Daily briefing content (rotates by day of week) ─────────────────────────
 const DAILY_CONTENT = [
   {
@@ -90,6 +98,7 @@ export default function Sage() {
   const [usingAI, setUsingAI] = useState(false)
   const [msgCount, setMsgCount] = useState(0)
   const [briefingExpanded, setBriefingExpanded] = useState(true)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -97,8 +106,28 @@ export default function Sage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages, loading])
 
-  async function send() {
-    const q = input.trim()
+  // Fetch user profile on mount
+  useEffect(() => {
+    const token = localStorage.getItem("access_token")
+    if (!token) return
+    fetch("/api/v1/profile/", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((d) => setProfile(d))
+      .catch(() => {})
+  }, [])
+
+  function buildProfileCtx(): string {
+    if (!profile) return ""
+    const parts: string[] = []
+    if (profile.role) parts.push(`Role: ${profile.role}`)
+    if (profile.domain) parts.push(`Domain: ${profile.domain}`)
+    if (profile.biggest_challenge) parts.push(`Current challenge: ${profile.biggest_challenge}`)
+    if (profile.goals) parts.push(`90-day goal: ${profile.goals}`)
+    return parts.length > 0 ? `[About this person: ${parts.join(", ")}] ` : ""
+  }
+
+  async function send(overrideText?: string) {
+    const q = (overrideText ?? input).trim()
     if (!q || loading) return
     setInput("")
     setMessages((prev) => [...prev, { id: Date.now(), role: "user", text: q }])
@@ -110,6 +139,7 @@ export default function Sage() {
       const apiUrl = import.meta.env.VITE_API_URL ?? ""
       const token = localStorage.getItem("access_token")
       const ctx = `Today is ${today.day}. Today's signal: "${today.signal}". Today's challenge: "${today.challenge}".`
+      const profileCtx = buildProfileCtx()
       const res = await fetch(`${apiUrl}/api/v1/council/query`, {
         method: "POST",
         headers: {
@@ -117,7 +147,7 @@ export default function Sage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          question: `[Context: ${ctx}] User asks Sage: ${q}`,
+          question: `${profileCtx}[Sage daily briefing context: ${ctx}] User asks Sage: ${q}`,
           round: msgCount,
         }),
       })
@@ -183,7 +213,10 @@ export default function Sage() {
           </div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700 }}>Sage</div>
-            <div style={{ fontSize: 8, color: "#4a2a6a", letterSpacing: "1px" }}>DAILY INTELLIGENCE · {today.day.toUpperCase()}</div>
+            <div style={{ fontSize: 8, color: "#4a2a6a", letterSpacing: "1px" }}>
+              DAILY INTELLIGENCE · {today.day.toUpperCase()}
+              {profile?.goals ? ` · ${profile.goals.slice(0, 30)}${profile.goals.length > 30 ? "…" : ""}` : ""}
+            </div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -313,10 +346,7 @@ export default function Sage() {
               ].map((p) => (
                 <button
                   key={p}
-                  onClick={() => {
-                    setInput(p)
-                    setTimeout(() => send(), 50)
-                  }}
+                  onClick={() => send(p)}
                   style={{
                     padding: "11px 13px",
                     background: "rgba(201,111,255,.04)",

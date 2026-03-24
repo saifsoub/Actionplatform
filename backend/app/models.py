@@ -58,6 +58,8 @@ class User(UserBase, table=True):
     agents: list["Agent"] = Relationship(back_populates="owner", cascade_delete=True)
     skills: list["Skill"] = Relationship(back_populates="owner", cascade_delete=True)
     subscription: "Subscription | None" = Relationship(back_populates="user")
+    council_sessions: list["CouncilSession"] = Relationship(back_populates="owner", cascade_delete=True)
+    profile: "UserProfile | None" = Relationship(back_populates="user")
 
 
 # Properties to return via API, id is always required
@@ -293,3 +295,90 @@ class CouncilQueryRequest(SQLModel):
 class CouncilQueryResponse(SQLModel):
     responses: dict[str, str]
     synthesis: str
+    session_id: uuid.UUID | None = None
+
+
+# ─────────────────────────────────────────────
+# Council Sessions (persistence)
+# ─────────────────────────────────────────────
+
+class CouncilSessionBase(SQLModel):
+    question: str = Field(max_length=2000)
+    atlas_response: str = Field(default="", max_length=3000)
+    nova_response: str = Field(default="", max_length=3000)
+    reza_response: str = Field(default="", max_length=3000)
+    kai_response: str = Field(default="", max_length=3000)
+    synthesis: str = Field(default="", max_length=1500)
+    outcome: str | None = Field(default=None, max_length=20)  # "acted" | "skipped" | "pending"
+    outcome_note: str | None = Field(default=None, max_length=500)
+    tags: str = Field(default="", max_length=500)
+
+
+class CouncilSession(CouncilSessionBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    owner_id: uuid.UUID = Field(
+        foreign_key="user.id", nullable=False, ondelete="CASCADE"
+    )
+    owner: "User | None" = Relationship(back_populates="council_sessions")
+
+
+class CouncilSessionPublic(CouncilSessionBase):
+    id: uuid.UUID
+    owner_id: uuid.UUID
+    created_at: datetime | None = None
+
+
+class CouncilSessionsPublic(SQLModel):
+    data: list[CouncilSessionPublic]
+    count: int
+
+
+class CouncilSessionOutcomeUpdate(SQLModel):
+    outcome: str = Field(max_length=20)
+    outcome_note: str | None = Field(default=None, max_length=500)
+
+
+# ─────────────────────────────────────────────
+# User Profile (personalization)
+# ─────────────────────────────────────────────
+
+class UserProfileBase(SQLModel):
+    role: str | None = Field(default=None, max_length=100)
+    domain: str | None = Field(default=None, max_length=100)
+    biggest_challenge: str | None = Field(default=None, max_length=500)
+    goals: str | None = Field(default=None, max_length=500)
+    timezone: str | None = Field(default=None, max_length=50)
+    sage_email_digest: bool = Field(default=False)
+    onboarding_complete: bool = Field(default=False)
+
+
+class UserProfile(UserProfileBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    user_id: uuid.UUID = Field(
+        foreign_key="user.id", nullable=False, ondelete="CASCADE", unique=True
+    )
+    user: "User | None" = Relationship(back_populates="profile")
+
+
+class UserProfilePublic(UserProfileBase):
+    id: uuid.UUID
+    user_id: uuid.UUID
+    created_at: datetime | None = None
+
+
+class UserProfileUpdate(SQLModel):
+    role: str | None = Field(default=None, max_length=100)
+    domain: str | None = Field(default=None, max_length=100)
+    biggest_challenge: str | None = Field(default=None, max_length=500)
+    goals: str | None = Field(default=None, max_length=500)
+    timezone: str | None = Field(default=None, max_length=50)
+    sage_email_digest: bool | None = None
+    onboarding_complete: bool | None = None
