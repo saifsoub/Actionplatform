@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 import anthropic as anthropic_sdk
 from fastapi import APIRouter, HTTPException
@@ -8,7 +9,20 @@ from app.api.deps import CurrentUser, SessionDep
 from app.core.config import settings
 from app.models import CouncilQueryRequest, CouncilQueryResponse, Subscription, SubscriptionTier
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/council", tags=["council"])
+
+# Module-level singleton — avoids re-initialising the HTTP client on every request
+_anthropic_client: anthropic_sdk.AsyncAnthropic | None = None
+
+
+def _get_anthropic_client() -> anthropic_sdk.AsyncAnthropic:
+    global _anthropic_client
+    if _anthropic_client is None:
+        _anthropic_client = anthropic_sdk.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+    return _anthropic_client
+
 
 # ── Subscription tier limits ──────────────────────────────────────────────────
 TIER_LIMITS: dict[str, int] = {
@@ -76,9 +90,15 @@ async def query_council(
     current_user: CurrentUser,
     session: SessionDep,
 ) -> CouncilQueryResponse:
-    # ── Check/create subscription ──
+    # ── Check API key early ──
+    if not settings.ANTHROPIC_API_KEY:
+        raise HTTPException(status_code=503, detail="AI council not configured")
+
+    # ── Check/create subscription, locking the row to prevent race conditions ──
     sub = session.exec(
-        select(Subscription).where(Subscription.user_id == current_user.id).with_for_update()
+        select(Subscription)
+        .where(Subscription.user_id == current_user.id)
+        .with_for_update()
     ).first()
 
     if not sub:
@@ -86,6 +106,13 @@ async def query_council(
         session.add(sub)
         session.commit()
         session.refresh(sub)
+        # Re-acquire with lock now that it exists
+        sub = session.exec(
+            select(Subscription)
+            .where(Subscription.user_id == current_user.id)
+            .with_for_update()
+        ).first()
+        assert sub is not None  # just created above
 
     limit = TIER_LIMITS.get(sub.tier, 3)
     if sub.sessions_used >= limit:
@@ -94,18 +121,25 @@ async def query_council(
             detail=f"Session limit reached for {sub.tier} plan. Please upgrade.",
         )
 
-    # ── Check API key ──
-    if not settings.ANTHROPIC_API_KEY:
-        raise HTTPException(status_code=503, detail="AI council not configured")
+    # ── Increment usage atomically before the AI call ──
+    # This ensures concurrent requests cannot bypass the limit even if the
+    # AI call takes several seconds.
+    sub.sessions_used += 1
+    session.add(sub)
+    session.commit()
 
-    client = anthropic_sdk.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+    client = _get_anthropic_client()
 
     try:
         results = await asyncio.gather(
             *[_call_agent(client, prompt, body.question) for prompt in AGENT_PROMPTS.values()]
         )
-    except anthropic_sdk.APIError:
-        raise HTTPException(status_code=502, detail="AI service temporarily unavailable")
+    except anthropic_sdk.APIError as e:
+        # Rollback the usage increment so the failed session isn't counted
+        sub.sessions_used -= 1
+        session.add(sub)
+        session.commit()
+        raise HTTPException(status_code=502, detail=f"Upstream AI error: {e}")
 
     responses = dict(zip(AGENT_PROMPTS.keys(), results))
 
@@ -118,12 +152,8 @@ async def query_council(
 
     try:
         synthesis = await _call_agent(client, SYNTHESIS_PROMPT, synthesis_context)
-    except anthropic_sdk.APIError:
+    except anthropic_sdk.APIError as e:
+        logger.warning("Council synthesis call failed: %s", e)
         synthesis = "The council has spoken — validate your core assumption first."
-
-    # ── Increment usage ──
-    sub.sessions_used += 1
-    session.add(sub)
-    session.commit()
 
     return CouncilQueryResponse(responses=responses, synthesis=synthesis)

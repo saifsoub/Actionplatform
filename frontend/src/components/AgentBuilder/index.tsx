@@ -38,8 +38,6 @@ const DEFAULT_FORM = {
   is_public: false,
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-
 function apiUrl() {
   return import.meta.env.VITE_API_URL ?? ""
 }
@@ -48,6 +46,22 @@ function authHeaders() {
     Authorization: `Bearer ${localStorage.getItem("access_token")}`,
     "Content-Type": "application/json",
   }
+}
+
+async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+  const res = await fetch(`${apiUrl()}${path}`, {
+    ...init,
+    headers: { ...authHeaders(), ...init?.headers },
+  })
+  if (!res.ok) {
+    let detail = `Request failed (${res.status})`
+    try {
+      const body = await res.clone().json()
+      if (body?.detail) detail = String(body.detail)
+    } catch { /* ignore parse error */ }
+    throw new Error(detail)
+  }
+  return res
 }
 
 export default function AgentBuilder() {
@@ -62,91 +76,95 @@ export default function AgentBuilder() {
   const [testingId, setTestingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [matchResult, setMatchResult] = useState<{ message: string; matched: number } | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadAgents()
     loadSkills()
   }, [])
 
+  function showError(msg: string) {
+    setError(msg)
+    setTimeout(() => setError(null), 5000)
+  }
+
   async function loadAgents() {
     try {
-      const res = await fetch(`${apiUrl()}/api/v1/agents/`, { headers: authHeaders() })
-      if (res.ok) {
-        const data = await res.json()
-        setAgents(data.data ?? [])
-      }
-    } catch { /* offline */ }
+      const res = await apiFetch("/api/v1/agents/")
+      const data = await res.json()
+      setAgents(data.data ?? [])
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to load agents")
+    }
   }
 
   async function loadSkills() {
     try {
-      const res = await fetch(`${apiUrl()}/api/v1/skills/`, { headers: authHeaders() })
-      if (res.ok) {
-        const data = await res.json()
-        setSkills(data.data ?? [])
-      }
-    } catch { /* offline */ }
+      const res = await apiFetch("/api/v1/skills/")
+      const data = await res.json()
+      setSkills(data.data ?? [])
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to load skills")
+    }
   }
 
   async function saveAgent() {
     if (!form.name.trim() || !form.instructions.trim()) return
     setSaving(true)
     try {
-      const url = editingId
-        ? `${apiUrl()}/api/v1/agents/${editingId}`
-        : `${apiUrl()}/api/v1/agents/`
-      const method = editingId ? "PATCH" : "POST"
-      const res = await fetch(url, {
-        method,
-        headers: authHeaders(),
+      const path = editingId ? `/api/v1/agents/${editingId}` : "/api/v1/agents/"
+      await apiFetch(path, {
+        method: editingId ? "PATCH" : "POST",
         body: JSON.stringify(form),
       })
-      if (res.ok) {
-        setForm({ ...DEFAULT_FORM })
-        setEditingId(null)
-        await loadAgents()
-      }
-    } catch { /* error */ }
-    setSaving(false)
+      setForm({ ...DEFAULT_FORM })
+      setEditingId(null)
+      await loadAgents()
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to save agent")
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function deleteAgent(id: string) {
-    await fetch(`${apiUrl()}/api/v1/agents/${id}`, { method: "DELETE", headers: authHeaders() })
-    await loadAgents()
+    try {
+      await apiFetch(`/api/v1/agents/${id}`, { method: "DELETE" })
+      await loadAgents()
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to delete agent")
+    }
   }
 
   async function saveSkill() {
     if (!skillForm.name.trim() || !skillForm.instructions.trim()) return
     setSaving(true)
     try {
-      const res = await fetch(`${apiUrl()}/api/v1/skills/`, {
+      await apiFetch("/api/v1/skills/", {
         method: "POST",
-        headers: authHeaders(),
         body: JSON.stringify(skillForm),
       })
-      if (res.ok) {
-        setSkillForm({ name: "", description: "", instructions: "", tags: "" })
-        await loadSkills()
-      }
-    } catch { /* error */ }
-    setSaving(false)
+      setSkillForm({ name: "", description: "", instructions: "", tags: "" })
+      await loadSkills()
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to save skill")
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function matchSkill(skillId: string) {
     try {
-      const res = await fetch(`${apiUrl()}/api/v1/skills/${skillId}/match`, {
-        method: "POST",
-        headers: authHeaders(),
+      const res = await apiFetch(`/api/v1/skills/${skillId}/match`, { method: "POST" })
+      const data = await res.json()
+      setMatchResult({
+        message: data.reasoning ?? "Skill matched.",
+        matched: data.matched_agent_ids?.length ?? 0,
       })
-      if (res.ok) {
-        const data = await res.json()
-        setMatchResult({
-          message: data.reasoning ?? "Skill matched.",
-          matched: data.matched_agent_ids?.length ?? 0,
-        })
-        await loadAgents()
-      }
-    } catch { /* error */ }
+      await loadAgents()
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Skill matching failed")
+    }
   }
 
   async function testAgent(agent: Agent) {
@@ -154,25 +172,18 @@ export default function AgentBuilder() {
     setTestingId(agent.id)
     setTestOutput("")
     try {
-      const res = await fetch(`${apiUrl()}/api/v1/council/query`, {
+      const res = await apiFetch("/api/v1/council/query", {
         method: "POST",
-        headers: authHeaders(),
         body: JSON.stringify({ question: testInput, round: 0 }),
       })
-      if (res.ok) {
-        const data = await res.json()
-        const agentKey = Object.keys(data.responses ?? {})[0]
-        setTestOutput(data.responses?.[agentKey] ?? "No response.")
-      } else {
-        // Mock test response
-        await sleep(1200)
-        setTestOutput(`${agent.persona} has considered your input and here's what they'd say: this is exactly the kind of challenge that requires first principles thinking before reaching for a solution. The key constraint you haven't mentioned yet is almost certainly the one that will determine the outcome.`)
-      }
-    } catch {
-      await sleep(1000)
-      setTestOutput(`${agent.persona} (demo): Your question touches on something fundamental. In my role as ${agent.role}, I'd push back on the framing before anything else — the way a problem is defined usually determines the solution space available.`)
+      const data = await res.json()
+      const agentKey = Object.keys(data.responses ?? {})[0]
+      setTestOutput(data.responses?.[agentKey] ?? "No response.")
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Test request failed")
+    } finally {
+      setTestingId(null)
     }
-    setTestingId(null)
   }
 
   function startEdit(agent: Agent) {
@@ -259,6 +270,32 @@ export default function AgentBuilder() {
       </div>
 
       <div style={S.container}>
+        {/* Error banner */}
+        {error && (
+          <div
+            style={{
+              background: "rgba(255,90,106,.1)",
+              border: "1px solid rgba(255,90,106,.3)",
+              borderRadius: 10,
+              padding: "10px 14px",
+              marginBottom: 14,
+              fontSize: 12,
+              color: "#FF5A6A",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            {error}
+            <button
+              onClick={() => setError(null)}
+              style={{ ...S.btn(false), padding: "2px 8px", fontSize: 9, color: "#FF5A6A" }}
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         {/* Tabs */}
         <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
           {(["agents", "skills"] as const).map((t) => (
