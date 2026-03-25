@@ -69,6 +69,7 @@ class Settings(BaseSettings):
         )
 
     ANTHROPIC_API_KEY: str | None = None
+    COUNCIL_MODEL: str = "claude-opus-4-6"
 
     SMTP_TLS: bool = True
     SMTP_SSL: bool = False

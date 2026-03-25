@@ -19,6 +19,7 @@ OpenAPI.TOKEN = async () => {
 }
 
 const handleApiError = (error: Error) => {
+  // 401/403 = invalid/expired credentials → clear token and redirect to login
   if (error instanceof ApiError && [401, 403].includes(error.status)) {
     localStorage.removeItem("access_token")
     window.location.href = "/login"

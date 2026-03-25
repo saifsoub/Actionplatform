@@ -260,6 +260,12 @@ class SubscriptionTier(str, Enum):
     elite = "elite"
 
 
+class CouncilOutcome(str, Enum):
+    acted = "acted"
+    skipped = "skipped"
+    pending = "pending"
+
+
 class SubscriptionBase(SQLModel):
     tier: SubscriptionTier = SubscriptionTier.free
     currency: str = Field(default="USD", max_length=3)
@@ -309,7 +315,7 @@ class CouncilSessionBase(SQLModel):
     reza_response: str = Field(default="", max_length=3000)
     kai_response: str = Field(default="", max_length=3000)
     synthesis: str = Field(default="", max_length=1500)
-    outcome: str | None = Field(default=None, max_length=20)  # "acted" | "skipped" | "pending"
+    outcome: CouncilOutcome | None = Field(default=None)
     outcome_note: str | None = Field(default=None, max_length=500)
     tags: str = Field(default="", max_length=500)
 
@@ -338,7 +344,7 @@ class CouncilSessionsPublic(SQLModel):
 
 
 class CouncilSessionOutcomeUpdate(SQLModel):
-    outcome: str = Field(max_length=20)
+    outcome: CouncilOutcome
     outcome_note: str | None = Field(default=None, max_length=500)
 
 

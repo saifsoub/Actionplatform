@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
@@ -18,11 +18,13 @@ router = APIRouter(prefix="/sessions", tags=["sessions"])
 def list_sessions(
     current_user: CurrentUser,
     session: SessionDep,
-    skip: int = 0,
-    limit: int = 50,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=500),
 ) -> CouncilSessionsPublic:
     count = session.exec(
-        select(func.count()).where(CouncilSession.owner_id == current_user.id)  # type: ignore[call-overload]
+        select(func.count())
+        .select_from(CouncilSession)
+        .where(CouncilSession.owner_id == current_user.id)
     ).one()
     sessions = session.exec(
         select(CouncilSession)
@@ -60,9 +62,6 @@ def update_outcome(
         raise HTTPException(status_code=404, detail="Session not found")
     if council_session.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not your session")
-    valid_outcomes = {"acted", "skipped", "pending"}
-    if body.outcome not in valid_outcomes:
-        raise HTTPException(status_code=400, detail=f"outcome must be one of {valid_outcomes}")
     council_session.outcome = body.outcome
     council_session.outcome_note = body.outcome_note
     session.add(council_session)

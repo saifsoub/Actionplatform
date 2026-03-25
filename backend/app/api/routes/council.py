@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from datetime import datetime, timezone
 
 import anthropic as anthropic_sdk
@@ -7,6 +8,8 @@ from sqlmodel import select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.config import settings
+logger = logging.getLogger(__name__)
+
 from app.models import (
     CouncilQueryRequest,
     CouncilQueryResponse,
@@ -89,7 +92,7 @@ def _build_profile_context(profile: UserProfile | None) -> str:
 
 async def _call_agent(client: anthropic_sdk.AsyncAnthropic, system: str, question: str) -> str:
     msg = await client.messages.create(
-        model="claude-opus-4-6",
+        model=settings.COUNCIL_MODEL,
         max_tokens=350,
         thinking={"type": "adaptive"},
         system=system,
@@ -144,7 +147,10 @@ async def query_council(
         results = await asyncio.gather(
             *[_call_agent(client, prompt, personalized_question) for prompt in AGENT_PROMPTS.values()]
         )
+    except anthropic_sdk.RateLimitError:
+        raise HTTPException(status_code=429, detail="AI service rate limit reached. Please try again shortly.")
     except anthropic_sdk.APIError as e:
+        logger.error("Council agent API error: %s", e)
         raise HTTPException(status_code=502, detail=f"Upstream AI error: {e}")
 
     responses = dict(zip(AGENT_PROMPTS.keys(), results))
@@ -158,7 +164,8 @@ async def query_council(
 
     try:
         synthesis = await _call_agent(client, SYNTHESIS_PROMPT, synthesis_context)
-    except anthropic_sdk.APIError:
+    except anthropic_sdk.APIError as e:
+        logger.warning("Council synthesis API error (using fallback): %s", e)
         synthesis = "The council has spoken — validate your core assumption first."
 
     # ── Persist session to DB ──
