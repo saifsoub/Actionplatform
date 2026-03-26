@@ -8,8 +8,6 @@ from sqlmodel import select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.config import settings
-logger = logging.getLogger(__name__)
-
 from app.models import (
     CouncilQueryRequest,
     CouncilQueryResponse,
@@ -18,6 +16,8 @@ from app.models import (
     SubscriptionTier,
     UserProfile,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/council", tags=["council"])
 
@@ -94,7 +94,6 @@ async def _call_agent(client: anthropic_sdk.AsyncAnthropic, system: str, questio
     msg = await client.messages.create(
         model=settings.COUNCIL_MODEL,
         max_tokens=350,
-        thinking={"type": "adaptive"},
         system=system,
         messages=[{"role": "user", "content": question}],
     )

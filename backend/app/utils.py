@@ -12,7 +12,6 @@ from jwt.exceptions import InvalidTokenError
 from app.core import security
 from app.core.config import settings
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -36,7 +35,8 @@ def send_email(
     subject: str = "",
     html_content: str = "",
 ) -> None:
-    assert settings.emails_enabled, "no provided configuration for email variables"
+    if not settings.emails_enabled:
+        raise RuntimeError("no provided configuration for email variables")
     message = emails.Message(
         subject=subject,
         html=html_content,
@@ -52,7 +52,7 @@ def send_email(
     if settings.SMTP_PASSWORD:
         smtp_options["password"] = settings.SMTP_PASSWORD
     response = message.send(to=email_to, smtp=smtp_options)
-    logger.info(f"send email result: {response}")
+    logger.info("send email result: %s", response)
 
 
 def generate_test_email(email_to: str) -> EmailData:

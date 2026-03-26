@@ -1,3 +1,4 @@
+import json
 import uuid
 
 import anthropic as anthropic_sdk
@@ -29,7 +30,7 @@ def list_skills(
     limit: int = 100,
 ) -> SkillsPublic:
     count = session.exec(
-        select(func.count()).where(Skill.owner_id == current_user.id)
+        select(func.count()).select_from(Skill).where(Skill.owner_id == current_user.id)
     ).one()
     skills = session.exec(
         select(Skill).where(Skill.owner_id == current_user.id).offset(skip).limit(limit)
@@ -146,11 +147,10 @@ Respond in JSON format only:
     client = anthropic_sdk.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
     try:
         msg = await client.messages.create(
-            model="claude-opus-4-6",
+            model=settings.COUNCIL_MODEL,
             max_tokens=500,
             messages=[{"role": "user", "content": prompt}],
         )
-        import json
         text = next((b.text for b in msg.content if hasattr(b, "text")), "{}")
         # extract JSON from possible markdown code block
         if "```" in text:
@@ -175,5 +175,9 @@ Respond in JSON format only:
             suggested_new_agent=bool(data.get("suggested_new_agent", False)),
             reasoning=str(data.get("reasoning", "")),
         )
-    except Exception as e:
+    except anthropic_sdk.RateLimitError:
+        raise HTTPException(status_code=429, detail="AI service rate limit reached. Please try again shortly.")
+    except anthropic_sdk.APIError as e:
         raise HTTPException(status_code=502, detail=f"AI matching error: {e}")
+    except (json.JSONDecodeError, ValueError, KeyError) as e:
+        raise HTTPException(status_code=502, detail=f"AI response parse error: {e}")
