@@ -97,7 +97,7 @@ class Item(ItemBase, table=True):
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     owner_id: uuid.UUID = Field(
-        foreign_key="user.id", nullable=False, ondelete="CASCADE"
+        foreign_key="user.id", nullable=False, ondelete="CASCADE", index=True
     )
     owner: User | None = Relationship(back_populates="items")
 
@@ -170,7 +170,7 @@ class Agent(AgentBase, table=True):
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     owner_id: uuid.UUID = Field(
-        foreign_key="user.id", nullable=False, ondelete="CASCADE"
+        foreign_key="user.id", nullable=False, ondelete="CASCADE", index=True
     )
     owner: "User | None" = Relationship(back_populates="agents")
     skills: list["AgentSkillLink"] = Relationship(back_populates="agent", cascade_delete=True)
@@ -214,7 +214,7 @@ class Skill(SkillBase, table=True):
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     owner_id: uuid.UUID = Field(
-        foreign_key="user.id", nullable=False, ondelete="CASCADE"
+        foreign_key="user.id", nullable=False, ondelete="CASCADE", index=True
     )
     owner: "User | None" = Relationship(back_populates="skills")
     agent_links: list["AgentSkillLink"] = Relationship(back_populates="skill", cascade_delete=True)

@@ -1,6 +1,7 @@
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
@@ -22,8 +23,8 @@ router = APIRouter(prefix="/agents", tags=["agents"])
 def list_agents(
     session: SessionDep,
     current_user: CurrentUser,
-    skip: int = 0,
-    limit: int = 100,
+    skip: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=500)] = 100,
 ) -> AgentsPublic:
     count = session.exec(
         select(func.count()).select_from(Agent).where(Agent.owner_id == current_user.id)
@@ -38,14 +39,14 @@ def list_agents(
 def list_public_agents(
     session: SessionDep,
     current_user: CurrentUser,
-    skip: int = 0,
-    limit: int = 100,
+    skip: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=500)] = 100,
 ) -> AgentsPublic:
     count = session.exec(
-        select(func.count()).select_from(Agent).where(Agent.is_public == True)  # noqa: E712
+        select(func.count()).select_from(Agent).where(Agent.is_public.is_(True))
     ).one()
     agents = session.exec(
-        select(Agent).where(Agent.is_public == True).offset(skip).limit(limit)  # noqa: E712
+        select(Agent).where(Agent.is_public.is_(True)).offset(skip).limit(limit)
     ).all()
     return AgentsPublic(data=list(agents), count=count)
 
