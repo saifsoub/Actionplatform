@@ -1,3 +1,4 @@
+import json
 import uuid
 
 import anthropic as anthropic_sdk
@@ -146,11 +147,10 @@ Respond in JSON format only:
     client = anthropic_sdk.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
     try:
         msg = await client.messages.create(
-            model="claude-opus-4-6",
+            model=settings.COUNCIL_MODEL,
             max_tokens=500,
             messages=[{"role": "user", "content": prompt}],
         )
-        import json
         text = next((b.text for b in msg.content if hasattr(b, "text")), "{}")
         # extract JSON from possible markdown code block
         if "```" in text:

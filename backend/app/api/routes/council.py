@@ -94,7 +94,6 @@ async def _call_agent(client: anthropic_sdk.AsyncAnthropic, system: str, questio
     msg = await client.messages.create(
         model=settings.COUNCIL_MODEL,
         max_tokens=350,
-        thinking={"type": "adaptive"},
         system=system,
         messages=[{"role": "user", "content": question}],
     )

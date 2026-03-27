@@ -38,8 +38,6 @@ const DEFAULT_FORM = {
   is_public: false,
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-
 function apiUrl() {
   return import.meta.env.VITE_API_URL ?? ""
 }
@@ -62,6 +60,7 @@ export default function AgentBuilder() {
   const [testingId, setTestingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [matchResult, setMatchResult] = useState<{ message: string; matched: number } | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadAgents()
@@ -74,8 +73,12 @@ export default function AgentBuilder() {
       if (res.ok) {
         const data = await res.json()
         setAgents(data.data ?? [])
+      } else if (res.status !== 401) {
+        setError("Failed to load agents.")
       }
-    } catch { /* offline */ }
+    } catch {
+      setError("Could not reach the server. Check your connection.")
+    }
   }
 
   async function loadSkills() {
@@ -84,13 +87,18 @@ export default function AgentBuilder() {
       if (res.ok) {
         const data = await res.json()
         setSkills(data.data ?? [])
+      } else if (res.status !== 401) {
+        setError("Failed to load skills.")
       }
-    } catch { /* offline */ }
+    } catch {
+      setError("Could not reach the server. Check your connection.")
+    }
   }
 
   async function saveAgent() {
     if (!form.name.trim() || !form.instructions.trim()) return
     setSaving(true)
+    setError(null)
     try {
       const url = editingId
         ? `${apiUrl()}/api/v1/agents/${editingId}`
@@ -105,19 +113,37 @@ export default function AgentBuilder() {
         setForm({ ...DEFAULT_FORM })
         setEditingId(null)
         await loadAgents()
+      } else {
+        const body = await res.json().catch(() => null)
+        setError(body?.detail ?? `Failed to save agent (${res.status}).`)
       }
-    } catch { /* error */ }
+    } catch {
+      setError("Could not reach the server. Check your connection.")
+    }
     setSaving(false)
   }
 
   async function deleteAgent(id: string) {
-    await fetch(`${apiUrl()}/api/v1/agents/${id}`, { method: "DELETE", headers: authHeaders() })
+    if (!window.confirm("Delete this agent? This cannot be undone.")) return
+    setError(null)
+    try {
+      const res = await fetch(`${apiUrl()}/api/v1/agents/${id}`, { method: "DELETE", headers: authHeaders() })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        setError(body?.detail ?? `Failed to delete agent (${res.status}).`)
+        return
+      }
+    } catch {
+      setError("Could not reach the server. Check your connection.")
+      return
+    }
     await loadAgents()
   }
 
   async function saveSkill() {
     if (!skillForm.name.trim() || !skillForm.instructions.trim()) return
     setSaving(true)
+    setError(null)
     try {
       const res = await fetch(`${apiUrl()}/api/v1/skills/`, {
         method: "POST",
@@ -127,12 +153,18 @@ export default function AgentBuilder() {
       if (res.ok) {
         setSkillForm({ name: "", description: "", instructions: "", tags: "" })
         await loadSkills()
+      } else {
+        const body = await res.json().catch(() => null)
+        setError(body?.detail ?? `Failed to save skill (${res.status}).`)
       }
-    } catch { /* error */ }
+    } catch {
+      setError("Could not reach the server. Check your connection.")
+    }
     setSaving(false)
   }
 
   async function matchSkill(skillId: string) {
+    setError(null)
     try {
       const res = await fetch(`${apiUrl()}/api/v1/skills/${skillId}/match`, {
         method: "POST",
@@ -145,14 +177,20 @@ export default function AgentBuilder() {
           matched: data.matched_agent_ids?.length ?? 0,
         })
         await loadAgents()
+      } else {
+        const body = await res.json().catch(() => null)
+        setError(body?.detail ?? `Skill matching failed (${res.status}).`)
       }
-    } catch { /* error */ }
+    } catch {
+      setError("Could not reach the server. Check your connection.")
+    }
   }
 
   async function testAgent(agent: Agent) {
     if (!testInput.trim()) return
     setTestingId(agent.id)
     setTestOutput("")
+    setError(null)
     try {
       const res = await fetch(`${apiUrl()}/api/v1/council/query`, {
         method: "POST",
@@ -164,13 +202,11 @@ export default function AgentBuilder() {
         const agentKey = Object.keys(data.responses ?? {})[0]
         setTestOutput(data.responses?.[agentKey] ?? "No response.")
       } else {
-        // Mock test response
-        await sleep(1200)
-        setTestOutput(`${agent.persona} has considered your input and here's what they'd say: this is exactly the kind of challenge that requires first principles thinking before reaching for a solution. The key constraint you haven't mentioned yet is almost certainly the one that will determine the outcome.`)
+        const body = await res.json().catch(() => null)
+        setError(body?.detail ?? `Test failed (${res.status}).`)
       }
     } catch {
-      await sleep(1000)
-      setTestOutput(`${agent.persona} (demo): Your question touches on something fundamental. In my role as ${agent.role}, I'd push back on the framing before anything else — the way a problem is defined usually determines the solution space available.`)
+      setError("Could not reach the server. Check your connection.")
     }
     setTestingId(null)
   }
@@ -259,6 +295,33 @@ export default function AgentBuilder() {
       </div>
 
       <div style={S.container}>
+        {/* Error banner */}
+        {error && (
+          <div
+            style={{
+              background: "rgba(255,90,106,.08)",
+              border: "1px solid rgba(255,90,106,.25)",
+              borderRadius: 9,
+              padding: "10px 14px",
+              marginBottom: 16,
+              fontSize: 11,
+              color: "#FF5A6A",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 10,
+            }}
+          >
+            <span>{error}</span>
+            <button
+              onClick={() => setError(null)}
+              style={{ ...S.btn(false), padding: "2px 8px", fontSize: 9, color: "#FF5A6A", flexShrink: 0 }}
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         {/* Tabs */}
         <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
           {(["agents", "skills"] as const).map((t) => (
