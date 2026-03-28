@@ -1,9 +1,13 @@
 import json
+import logging
+import re
 import uuid
 
 import anthropic as anthropic_sdk
 from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select
+
+logger = logging.getLogger(__name__)
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.config import settings
@@ -153,8 +157,9 @@ Respond in JSON format only:
         )
         text = next((b.text for b in msg.content if hasattr(b, "text")), "{}")
         # extract JSON from possible markdown code block
-        if "```" in text:
-            text = text.split("```")[1].lstrip("json").strip()
+        md_match = re.search(r"```(?:json)?\s*([\s\S]*?)```", text)
+        if md_match:
+            text = md_match.group(1).strip()
         data = json.loads(text)
         matched_ids = []
         for uid in data.get("matched_agent_ids", []):
@@ -175,5 +180,11 @@ Respond in JSON format only:
             suggested_new_agent=bool(data.get("suggested_new_agent", False)),
             reasoning=str(data.get("reasoning", "")),
         )
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"AI matching error: {e}")
+    except anthropic_sdk.RateLimitError:
+        raise HTTPException(status_code=429, detail="AI service rate limit reached. Please try again shortly.")
+    except anthropic_sdk.APIError as e:
+        logger.error("Skill match AI error: %s", e)
+        raise HTTPException(status_code=502, detail="AI matching service unavailable")
+    except json.JSONDecodeError as e:
+        logger.error("Skill match JSON parse error: %s", e)
+        raise HTTPException(status_code=502, detail="AI returned a malformed response")

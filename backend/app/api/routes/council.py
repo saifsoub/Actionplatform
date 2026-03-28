@@ -21,6 +21,16 @@ from app.models import (
 
 router = APIRouter(prefix="/council", tags=["council"])
 
+# Reuse a single AsyncAnthropic client across requests to avoid repeated TLS handshakes
+_anthropic_client: anthropic_sdk.AsyncAnthropic | None = None
+
+
+def _get_client() -> anthropic_sdk.AsyncAnthropic:
+    global _anthropic_client
+    if _anthropic_client is None:
+        _anthropic_client = anthropic_sdk.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+    return _anthropic_client
+
 # ── Subscription tier limits ──────────────────────────────────────────────────
 TIER_LIMITS: dict[str, int] = {
     SubscriptionTier.free: 3,
@@ -140,7 +150,7 @@ async def query_council(
     # Prepend profile context to the question for each agent
     personalized_question = f"{profile_ctx}{body.question}" if profile_ctx else body.question
 
-    client = anthropic_sdk.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+    client = _get_client()
 
     try:
         results = await asyncio.gather(
