@@ -26,7 +26,7 @@ def list_agents(
     limit: int = 100,
 ) -> AgentsPublic:
     count = session.exec(
-        select(func.count()).where(Agent.owner_id == current_user.id)
+        select(func.count()).select_from(Agent).where(Agent.owner_id == current_user.id)
     ).one()
     agents = session.exec(
         select(Agent).where(Agent.owner_id == current_user.id).offset(skip).limit(limit)
@@ -42,7 +42,7 @@ def list_public_agents(
     limit: int = 100,
 ) -> AgentsPublic:
     count = session.exec(
-        select(func.count()).where(Agent.is_public.is_(True))
+        select(func.count()).select_from(Agent).where(Agent.is_public.is_(True))
     ).one()
     agents = session.exec(
         select(Agent).where(Agent.is_public.is_(True)).offset(skip).limit(limit)

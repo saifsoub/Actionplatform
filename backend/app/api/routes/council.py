@@ -8,8 +8,6 @@ from sqlmodel import select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.config import settings
-logger = logging.getLogger(__name__)
-
 from app.models import (
     CouncilQueryRequest,
     CouncilQueryResponse,
@@ -18,6 +16,8 @@ from app.models import (
     SubscriptionTier,
     UserProfile,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/council", tags=["council"])
 
@@ -152,17 +152,24 @@ async def query_council(
 
     client = _get_client()
 
-    try:
-        results = await asyncio.gather(
-            *[_call_agent(client, prompt, personalized_question) for prompt in AGENT_PROMPTS.values()]
-        )
-    except anthropic_sdk.RateLimitError:
-        raise HTTPException(status_code=429, detail="AI service rate limit reached. Please try again shortly.")
-    except anthropic_sdk.APIError as e:
-        logger.error("Council agent API error: %s", e)
-        raise HTTPException(status_code=502, detail=f"Upstream AI error: {e}")
+    raw = await asyncio.gather(
+        *[_call_agent(client, prompt, personalized_question) for prompt in AGENT_PROMPTS.values()],
+        return_exceptions=True,
+    )
 
-    responses = dict(zip(AGENT_PROMPTS.keys(), results))
+    # Surface hard failures; allow individual agents to degrade gracefully
+    responses: dict[str, str] = {}
+    for agent_id, result in zip(AGENT_PROMPTS.keys(), raw):
+        if isinstance(result, anthropic_sdk.RateLimitError):
+            raise HTTPException(status_code=429, detail="AI service rate limit reached. Please try again shortly.")
+        if isinstance(result, anthropic_sdk.APIError):
+            logger.error("Council agent %s API error: %s", agent_id, result)
+            responses[agent_id] = "[Advisor unavailable — please retry]"
+        elif isinstance(result, Exception):
+            logger.error("Council agent %s unexpected error: %s", agent_id, result)
+            responses[agent_id] = "[Advisor unavailable — please retry]"
+        else:
+            responses[agent_id] = result
 
     synthesis_context = (
         f"Question: {body.question}\n\n"

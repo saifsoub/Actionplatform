@@ -178,7 +178,7 @@ def read_user_by_id(
             status_code=403,
             detail="The user doesn't have enough privileges",
         )
-    if user is None:
+    if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
