@@ -8,21 +8,8 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
+from app.core.ai import get_anthropic_client
 from app.core.config import settings
-
-logger = logging.getLogger(__name__)
-
-# Reuse a single AsyncAnthropic client to avoid repeated TLS handshakes
-_anthropic_client: anthropic_sdk.AsyncAnthropic | None = None
-
-
-def _get_client() -> anthropic_sdk.AsyncAnthropic:
-    global _anthropic_client
-    if _anthropic_client is None:
-        _anthropic_client = anthropic_sdk.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
-    return _anthropic_client
-
-
 from app.models import (
     Agent,
     AgentSkillLink,
@@ -34,6 +21,8 @@ from app.models import (
     SkillsPublic,
     SkillUpdate,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/skills", tags=["skills"])
 
@@ -160,7 +149,7 @@ Respond in JSON format only:
   "reasoning": "One sentence explanation"
 }}"""
 
-    client = _get_client()
+    client = get_anthropic_client()
     try:
         msg = await client.messages.create(
             model=settings.COUNCIL_MODEL,

@@ -77,6 +77,8 @@ const SYNTH = [
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
+let _msgSeq = 0
+
 interface Message {
   id: number
   agent: AgentId
@@ -120,7 +122,7 @@ export default function LLMCouncil() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question: q, round: r }),
+        body: JSON.stringify({ question: q }),
       })
       if (res.ok) {
         const data = await res.json()
@@ -139,7 +141,7 @@ export default function LLMCouncil() {
       await sleep(900 + Math.random() * 700)
       setTyping(null)
       const text = agentResponses?.[id] ?? M[id].r[r % M[id].r.length]
-      setMessages((prev) => [...prev, { id: Math.random(), agent: id, text, round: r }])
+      setMessages((prev) => [...prev, { id: ++_msgSeq, agent: id, text, round: r }])
       setSpoke((prev) => ({ ...prev, [id]: true }))
       if (i < ORDER.length - 1) {
         await sleep(150)

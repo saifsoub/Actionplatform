@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 
 from app.api.deps import CurrentUser, SessionDep
+from app.core.ai import get_anthropic_client
 from app.core.config import settings
 from app.models import (
     CouncilQueryRequest,
@@ -20,16 +21,6 @@ from app.models import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/council", tags=["council"])
-
-# Reuse a single AsyncAnthropic client across requests to avoid repeated TLS handshakes
-_anthropic_client: anthropic_sdk.AsyncAnthropic | None = None
-
-
-def _get_client() -> anthropic_sdk.AsyncAnthropic:
-    global _anthropic_client
-    if _anthropic_client is None:
-        _anthropic_client = anthropic_sdk.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
-    return _anthropic_client
 
 # ── Subscription tier limits ──────────────────────────────────────────────────
 TIER_LIMITS: dict[str, int] = {
@@ -150,7 +141,7 @@ async def query_council(
     # Prepend profile context to the question for each agent
     personalized_question = f"{profile_ctx}{body.question}" if profile_ctx else body.question
 
-    client = _get_client()
+    client = get_anthropic_client()
 
     raw = await asyncio.gather(
         *[_call_agent(client, prompt, personalized_question) for prompt in AGENT_PROMPTS.values()],

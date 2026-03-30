@@ -295,7 +295,6 @@ class SubscriptionPublic(SubscriptionBase):
 
 class CouncilQueryRequest(SQLModel):
     question: str = Field(min_length=1, max_length=2000)
-    round: int = Field(default=0, ge=0)
 
 
 class CouncilQueryResponse(SQLModel):

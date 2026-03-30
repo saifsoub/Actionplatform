@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
-from sqlmodel import func, select
+from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import (
@@ -29,7 +29,7 @@ def list_sessions(
     sessions = session.exec(
         select(CouncilSession)
         .where(CouncilSession.owner_id == current_user.id)
-        .order_by(CouncilSession.created_at.desc())  # type: ignore[union-attr]
+        .order_by(col(CouncilSession.created_at).desc())
         .offset(skip)
         .limit(limit)
     ).all()
