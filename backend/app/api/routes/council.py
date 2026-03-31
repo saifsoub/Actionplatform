@@ -111,8 +111,9 @@ async def query_council(
     session: SessionDep,
 ) -> CouncilQueryResponse:
     # ── Check/create subscription ──
+    # Use with_for_update() to lock the row and prevent concurrent over-limit requests
     sub = session.exec(
-        select(Subscription).where(Subscription.user_id == current_user.id)
+        select(Subscription).where(Subscription.user_id == current_user.id).with_for_update()
     ).first()
 
     if not sub:
@@ -120,6 +121,10 @@ async def query_council(
         session.add(sub)
         session.commit()
         session.refresh(sub)
+        # Re-acquire with lock after creation
+        sub = session.exec(
+            select(Subscription).where(Subscription.user_id == current_user.id).with_for_update()
+        ).first()
 
     limit = TIER_LIMITS.get(sub.tier, 3)
     if sub.sessions_used >= limit:
