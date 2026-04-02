@@ -35,9 +35,7 @@ def update_profile(
         session.add(profile)
 
     update_data = body.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(profile, field, value)
-
+    profile.sqlmodel_update(update_data)
     session.add(profile)
     session.commit()
     session.refresh(profile)

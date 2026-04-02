@@ -154,18 +154,23 @@ async def query_council(
     )
 
     # Surface hard failures; allow individual agents to degrade gracefully
+    _UNAVAILABLE = "[Advisor unavailable — please retry]"
     responses: dict[str, str] = {}
     for agent_id, result in zip(AGENT_PROMPTS.keys(), raw):
         if isinstance(result, anthropic_sdk.RateLimitError):
             raise HTTPException(status_code=429, detail="AI service rate limit reached. Please try again shortly.")
         if isinstance(result, anthropic_sdk.APIError):
             logger.error("Council agent %s API error: %s", agent_id, result)
-            responses[agent_id] = "[Advisor unavailable — please retry]"
+            responses[agent_id] = _UNAVAILABLE
         elif isinstance(result, Exception):
             logger.error("Council agent %s unexpected error: %s", agent_id, result)
-            responses[agent_id] = "[Advisor unavailable — please retry]"
+            responses[agent_id] = _UNAVAILABLE
         else:
             responses[agent_id] = result
+
+    # If every advisor failed, abort without charging the session
+    if all(v == _UNAVAILABLE for v in responses.values()):
+        raise HTTPException(status_code=503, detail="All advisors are currently unavailable. Please try again shortly.")
 
     synthesis_context = (
         f"Question: {body.question}\n\n"
@@ -176,8 +181,11 @@ async def query_council(
 
     try:
         synthesis = await _call_agent(client, SYNTHESIS_PROMPT, synthesis_context)
-    except anthropic_sdk.APIError as e:
-        logger.warning("Council synthesis API error (using fallback): %s", e)
+    except anthropic_sdk.RateLimitError as e:
+        logger.warning("Council synthesis rate-limited (using fallback): %s", e)
+        synthesis = "The council has spoken — validate your core assumption first."
+    except Exception as e:
+        logger.warning("Council synthesis error (using fallback): %s", e)
         synthesis = "The council has spoken — validate your core assumption first."
 
     # ── Persist session to DB ──
