@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 import anthropic as anthropic_sdk
 from fastapi import APIRouter, HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from app.api.deps import CurrentUser, SessionDep
@@ -111,20 +112,31 @@ async def query_council(
     session: SessionDep,
 ) -> CouncilQueryResponse:
     # ── Check/create subscription ──
-    # Use with_for_update() to lock the row and prevent concurrent over-limit requests
+    # Try to fetch existing row first; if absent, insert and handle concurrent creation
+    # via IntegrityError (unique constraint on user_id) rather than an unreliable
+    # SELECT ... FOR UPDATE on a non-existent row.
     sub = session.exec(
-        select(Subscription).where(Subscription.user_id == current_user.id).with_for_update()
+        select(Subscription).where(Subscription.user_id == current_user.id)
     ).first()
 
     if not sub:
-        sub = Subscription(user_id=current_user.id, tier=SubscriptionTier.free)
-        session.add(sub)
-        session.commit()
-        session.refresh(sub)
-        # Re-acquire with lock after creation
-        sub = session.exec(
-            select(Subscription).where(Subscription.user_id == current_user.id).with_for_update()
-        ).first()
+        try:
+            sub = Subscription(user_id=current_user.id, tier=SubscriptionTier.free)
+            session.add(sub)
+            session.commit()
+            session.refresh(sub)
+        except IntegrityError:
+            session.rollback()
+            sub = session.exec(
+                select(Subscription).where(Subscription.user_id == current_user.id)
+            ).first()
+            if not sub:
+                raise HTTPException(status_code=500, detail="Failed to initialize subscription.")
+
+    # Lock the row for the remainder of the request to prevent concurrent over-limit requests
+    sub = session.exec(
+        select(Subscription).where(Subscription.user_id == current_user.id).with_for_update()
+    ).first()
 
     limit = TIER_LIMITS.get(sub.tier, 3)
     if sub.sessions_used >= limit:
@@ -184,8 +196,11 @@ async def query_council(
     except anthropic_sdk.RateLimitError as e:
         logger.warning("Council synthesis rate-limited (using fallback): %s", e)
         synthesis = "The council has spoken — validate your core assumption first."
-    except Exception as e:
-        logger.warning("Council synthesis error (using fallback): %s", e)
+    except anthropic_sdk.APIError as e:
+        logger.warning("Council synthesis API error (using fallback): %s", e)
+        synthesis = "The council has spoken — validate your core assumption first."
+    except asyncio.TimeoutError as e:
+        logger.warning("Council synthesis timed out (using fallback): %s", e)
         synthesis = "The council has spoken — validate your core assumption first."
 
     # ── Persist session to DB ──

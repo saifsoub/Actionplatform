@@ -162,12 +162,16 @@ Respond in JSON format only:
         if md_match:
             text = md_match.group(1).strip()
         data = json.loads(text)
+        owned_agent_ids = {a.id for a in agents}
         matched_ids = []
         for uid in data.get("matched_agent_ids", []):
             try:
-                matched_ids.append(uuid.UUID(str(uid)))
+                parsed = uuid.UUID(str(uid))
             except ValueError:
-                pass
+                continue
+            # Only accept IDs that belong to the current user
+            if parsed in owned_agent_ids:
+                matched_ids.append(parsed)
         # auto-assign skill to matched agents
         for aid in matched_ids:
             existing = session.get(AgentSkillLink, {"agent_id": aid, "skill_id": skill_id})

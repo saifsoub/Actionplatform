@@ -1,8 +1,9 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr, Field
 
+from app import crud
 from app.api.deps import SessionDep, get_current_active_superuser
 from app.core.security import get_password_hash
 from app.models import (
@@ -25,6 +26,9 @@ def create_user(user_in: PrivateUserCreate, session: SessionDep) -> Any:
     """
     Create a new user.
     """
+    existing = crud.get_user_by_email(session=session, email=user_in.email)
+    if existing:
+        raise HTTPException(status_code=400, detail="A user with this email already exists.")
 
     user = User(
         email=user_in.email,
