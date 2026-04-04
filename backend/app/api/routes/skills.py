@@ -4,7 +4,7 @@ import re
 import uuid
 
 import anthropic as anthropic_sdk
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
@@ -31,8 +31,8 @@ router = APIRouter(prefix="/skills", tags=["skills"])
 def list_skills(
     session: SessionDep,
     current_user: CurrentUser,
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=500),
 ) -> SkillsPublic:
     count = session.exec(
         select(func.count()).select_from(Skill).where(Skill.owner_id == current_user.id)
@@ -156,7 +156,7 @@ Respond in JSON format only:
             max_tokens=500,
             messages=[{"role": "user", "content": prompt}],
         )
-        text = next((b.text for b in msg.content if hasattr(b, "text")), "{}")
+        text = next((b.text for b in msg.content if isinstance(b, anthropic_sdk.types.TextBlock)), "{}")
         # extract JSON from possible markdown code block
         md_match = re.search(r"```(?:json)?\s*([\s\S]*?)```", text)
         if md_match:

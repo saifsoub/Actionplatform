@@ -1,10 +1,12 @@
 import logging
 import time
+from typing import Any
 
 import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.routing import APIRoute
 from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import Response
 
 from app.api.main import api_router
 from app.core.config import settings
@@ -37,7 +39,7 @@ if settings.all_cors_origins:
 
 
 @app.middleware("http")
-async def log_requests(request: Request, call_next):  # type: ignore[no-untyped-def]
+async def log_requests(request: Request, call_next: Any) -> Response:  # noqa: ANN401
     start = time.monotonic()
     response = await call_next(request)
     duration_ms = (time.monotonic() - start) * 1000

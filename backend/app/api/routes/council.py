@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/council", tags=["council"])
 
 # ── Subscription tier limits ──────────────────────────────────────────────────
-TIER_LIMITS: dict[str, int] = {
+TIER_LIMITS: dict[SubscriptionTier, int] = {
     SubscriptionTier.free: 3,
     SubscriptionTier.pro: 50,
     SubscriptionTier.elite: 9999,
@@ -100,8 +100,8 @@ async def _call_agent(client: anthropic_sdk.AsyncAnthropic, system: str, questio
         messages=[{"role": "user", "content": question}],
     )
     for block in msg.content:
-        if hasattr(block, "text"):
-            return block.text  # type: ignore[union-attr]
+        if isinstance(block, anthropic_sdk.types.TextBlock):
+            return block.text
     return ""
 
 
@@ -137,8 +137,10 @@ async def query_council(
     sub = session.exec(
         select(Subscription).where(Subscription.user_id == current_user.id).with_for_update()
     ).first()
+    if not sub:
+        raise HTTPException(status_code=500, detail="Failed to load subscription.")
 
-    limit = TIER_LIMITS.get(sub.tier, 3)
+    limit = TIER_LIMITS.get(sub.tier, TIER_LIMITS[SubscriptionTier.free])
     if sub.sessions_used >= limit:
         raise HTTPException(
             status_code=402,
@@ -168,7 +170,7 @@ async def query_council(
     # Surface hard failures; allow individual agents to degrade gracefully
     _UNAVAILABLE = "[Advisor unavailable — please retry]"
     responses: dict[str, str] = {}
-    for agent_id, result in zip(AGENT_PROMPTS.keys(), raw):
+    for agent_id, result in zip(AGENT_PROMPTS.keys(), raw, strict=True):
         if isinstance(result, anthropic_sdk.RateLimitError):
             raise HTTPException(status_code=429, detail="AI service rate limit reached. Please try again shortly.")
         if isinstance(result, anthropic_sdk.APIError):
