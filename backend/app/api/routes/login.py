@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 from typing import Annotated, Any
 
@@ -17,6 +18,8 @@ from app.utils import (
     verify_password_reset_token,
 )
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(tags=["login"])
 
 
@@ -31,8 +34,10 @@ def login_access_token(
         session=session, email=form_data.username, password=form_data.password
     )
     if not user:
+        logger.warning("Failed login attempt for email: %s", form_data.username)
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     elif not user.is_active:
+        logger.warning("Login attempt for inactive user: %s", form_data.username)
         raise HTTPException(status_code=400, detail="Inactive user")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return Token(

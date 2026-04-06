@@ -162,10 +162,16 @@ async def query_council(
 
     client = get_anthropic_client()
 
-    raw = await asyncio.gather(
-        *[_call_agent(client, prompt, personalized_question) for prompt in AGENT_PROMPTS.values()],
-        return_exceptions=True,
-    )
+    try:
+        raw = await asyncio.wait_for(
+            asyncio.gather(
+                *[_call_agent(client, prompt, personalized_question) for prompt in AGENT_PROMPTS.values()],
+                return_exceptions=True,
+            ),
+            timeout=90.0,
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Council timed out. Please try again.")
 
     # Surface hard failures; allow individual agents to degrade gracefully
     _UNAVAILABLE = "[Advisor unavailable — please retry]"

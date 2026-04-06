@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, HTTPException, Query
-from sqlmodel import func, select
+from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import (
@@ -29,7 +29,11 @@ def list_agents(
         select(func.count()).select_from(Agent).where(Agent.owner_id == current_user.id)
     ).one()
     agents = session.exec(
-        select(Agent).where(Agent.owner_id == current_user.id).offset(skip).limit(limit)
+        select(Agent)
+        .where(Agent.owner_id == current_user.id)
+        .order_by(col(Agent.created_at).desc())
+        .offset(skip)
+        .limit(limit)
     ).all()
     return AgentsPublic(data=list(agents), count=count)
 
@@ -45,7 +49,11 @@ def list_public_agents(
         select(func.count()).select_from(Agent).where(Agent.is_public.is_(True))
     ).one()
     agents = session.exec(
-        select(Agent).where(Agent.is_public.is_(True)).offset(skip).limit(limit)
+        select(Agent)
+        .where(Agent.is_public.is_(True))
+        .order_by(col(Agent.created_at).desc())
+        .offset(skip)
+        .limit(limit)
     ).all()
     return AgentsPublic(data=list(agents), count=count)
 

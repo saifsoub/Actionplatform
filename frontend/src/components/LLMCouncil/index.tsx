@@ -96,6 +96,7 @@ export default function LLMCouncil() {
   const [round, setRound] = useState(0)
   const [spoke, setSpoke] = useState<Record<string, boolean>>({})
   const [usingAI, setUsingAI] = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const roundRef = useRef(0)
   const sessionQuestionRef = useRef("")
@@ -129,7 +130,21 @@ export default function LLMCouncil() {
         agentResponses = data.responses as Record<string, string>
         synthResponse = data.synthesis as string
         setUsingAI(true)
+      } else if (res.status === 402) {
+        const data = await res.json().catch(() => ({}))
+        setLoading(false)
+        setApiError(data.detail ?? "Session limit reached. Please upgrade your plan.")
+        return
+      } else if (res.status === 429) {
+        setLoading(false)
+        setApiError("AI service is busy. Please wait a moment and try again.")
+        return
+      } else if (res.status === 503 || res.status === 504) {
+        setLoading(false)
+        setApiError("The council is temporarily unavailable. Please try again shortly.")
+        return
       }
+      // Other non-ok responses fall through to mock
     } catch {
       // Network error — fall through to mock
     }
@@ -165,6 +180,7 @@ export default function LLMCouncil() {
     setSynthesis("")
     setSpoke({})
     setUsingAI(false)
+    setApiError(null)
     roundRef.current = 0
     setRound(0)
     await runRound()
@@ -186,6 +202,7 @@ export default function LLMCouncil() {
     setLoading(false)
     setSpoke({})
     setUsingAI(false)
+    setApiError(null)
     roundRef.current = 0
     setRound(0)
     sessionQuestionRef.current = ""
@@ -459,6 +476,39 @@ export default function LLMCouncil() {
               }}
             >
               New ↺
+            </button>
+          </div>
+        )}
+
+        {/* API Error Banner */}
+        {apiError && (
+          <div
+            style={{
+              background: "rgba(255,90,106,.08)",
+              border: "1px solid rgba(255,90,106,.3)",
+              borderRadius: 10,
+              padding: "12px 16px",
+              marginBottom: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+            }}
+          >
+            <span style={{ fontSize: 12, color: "#FF5A6A", lineHeight: 1.5 }}>{apiError}</span>
+            <button
+              onClick={() => setApiError(null)}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#FF5A6A",
+                cursor: "pointer",
+                fontSize: 14,
+                padding: "0 4px",
+                flexShrink: 0,
+              }}
+            >
+              ✕
             </button>
           </div>
         )}

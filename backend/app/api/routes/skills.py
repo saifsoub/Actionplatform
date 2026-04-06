@@ -5,7 +5,7 @@ import uuid
 
 import anthropic as anthropic_sdk
 from fastapi import APIRouter, HTTPException, Query
-from sqlmodel import func, select
+from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.ai import get_anthropic_client
@@ -38,7 +38,11 @@ def list_skills(
         select(func.count()).select_from(Skill).where(Skill.owner_id == current_user.id)
     ).one()
     skills = session.exec(
-        select(Skill).where(Skill.owner_id == current_user.id).offset(skip).limit(limit)
+        select(Skill)
+        .where(Skill.owner_id == current_user.id)
+        .order_by(col(Skill.created_at).desc())
+        .offset(skip)
+        .limit(limit)
     ).all()
     return SkillsPublic(data=list(skills), count=count)
 
