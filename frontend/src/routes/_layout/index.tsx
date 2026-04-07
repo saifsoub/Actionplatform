@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { useEffect, useState } from "react"
+import { type CSSProperties, useEffect, useState } from "react"
 
 import useAuth from "@/hooks/useAuth"
 
@@ -72,34 +72,34 @@ function Dashboard() {
     const token = localStorage.getItem("access_token")
     if (!token) return
 
+    const headers = { Authorization: `Bearer ${token}` }
+
     // Fetch recent sessions
-    fetch("/api/v1/sessions/?limit=5", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
+    fetch("/api/v1/sessions/?limit=5", { headers })
+      .then((r) => {
+        if (!r.ok) throw new Error(`sessions ${r.status}`)
+        return r.json()
+      })
       .then((data) => setSessions(data.data ?? []))
-      .catch(() => {})
+      .catch((err) => console.warn("Failed to load sessions:", err))
 
-    // Fetch subscription usage
-    fetch("/api/v1/sessions/?limit=1", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(() => {
-        // Pull usage from subscription info embedded in session count
+    // Fetch real subscription usage
+    fetch("/api/v1/council/subscription", { headers })
+      .then((r) => {
+        if (!r.ok) throw new Error(`subscription ${r.status}`)
+        return r.json()
       })
-      .catch(() => {})
+      .then((data) => setUsage({ used: data.sessions_used, limit: data.sessions_limit }))
+      .catch((err) => console.warn("Failed to load subscription:", err))
 
-    // Check onboarding
-    fetch("/api/v1/profile/", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        setOnboardingDone(data.onboarding_complete ?? false)
-        // Estimate usage from sessions count
-        setUsage({ used: 0, limit: 3 }) // will be replaced by real data
+    // Fetch profile for onboarding state
+    fetch("/api/v1/profile/", { headers })
+      .then((r) => {
+        if (!r.ok) throw new Error(`profile ${r.status}`)
+        return r.json()
       })
-      .catch(() => {})
+      .then((data) => setOnboardingDone(data.onboarding_complete ?? false))
+      .catch((err) => console.warn("Failed to load profile:", err))
   }, [])
 
   const firstName = currentUser?.full_name?.split(" ")[0] || currentUser?.email?.split("@")[0] || "there"
@@ -328,7 +328,7 @@ function getTimeOfDay(): string {
   return "evening"
 }
 
-function quickActionStyle(color: string): React.CSSProperties {
+function quickActionStyle(color: string): CSSProperties {
   return {
     background: `${color}0d`,
     border: `1px solid ${color}33`,

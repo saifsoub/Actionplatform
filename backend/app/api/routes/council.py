@@ -15,6 +15,7 @@ from app.models import (
     CouncilQueryResponse,
     CouncilSession,
     Subscription,
+    SubscriptionPublic,
     SubscriptionTier,
     UserProfile,
 )
@@ -67,6 +68,40 @@ SYNTHESIS_PROMPT = (
     "shared insight across all four perspectives. Be direct and decisive. "
     "No attribution to individual advisors, no bullet points."
 )
+
+
+@router.get("/subscription", response_model=SubscriptionPublic)
+def get_subscription(
+    current_user: CurrentUser,
+    session: SessionDep,
+) -> SubscriptionPublic:
+    """Return the current user's subscription status and session limit."""
+    sub = session.exec(
+        select(Subscription).where(Subscription.user_id == current_user.id)
+    ).first()
+    if not sub:
+        try:
+            sub = Subscription(user_id=current_user.id, tier=SubscriptionTier.free)
+            session.add(sub)
+            session.commit()
+            session.refresh(sub)
+        except IntegrityError:
+            session.rollback()
+            sub = session.exec(
+                select(Subscription).where(Subscription.user_id == current_user.id)
+            ).first()
+            if not sub:
+                raise HTTPException(status_code=500, detail="Failed to initialize subscription.")
+    limit = TIER_LIMITS.get(sub.tier, TIER_LIMITS[SubscriptionTier.free])
+    return SubscriptionPublic(
+        id=sub.id,
+        user_id=sub.user_id,
+        tier=sub.tier,
+        currency=sub.currency,
+        sessions_used=sub.sessions_used,
+        sessions_limit=limit,
+        created_at=sub.created_at,
+    )
 
 
 def _build_profile_context(profile: UserProfile | None) -> str:
@@ -203,13 +238,13 @@ async def query_council(
         synthesis = await _call_agent(client, SYNTHESIS_PROMPT, synthesis_context)
     except anthropic_sdk.RateLimitError as e:
         logger.warning("Council synthesis rate-limited (using fallback): %s", e)
-        synthesis = "The council has spoken — validate your core assumption first."
+        synthesis = "The advisors have weighed in — the AI service is under heavy load, so synthesis is unavailable. Review each perspective above directly."
     except anthropic_sdk.APIError as e:
         logger.warning("Council synthesis API error (using fallback): %s", e)
-        synthesis = "The council has spoken — validate your core assumption first."
+        synthesis = "The advisors have shared their views above. Synthesis is temporarily unavailable — focus on the point of sharpest disagreement."
     except asyncio.TimeoutError as e:
         logger.warning("Council synthesis timed out (using fallback): %s", e)
-        synthesis = "The council has spoken — validate your core assumption first."
+        synthesis = "The advisors have spoken. Synthesis timed out — read each response and identify the strongest common thread yourself."
 
     # ── Persist session to DB ──
     council_session = CouncilSession(
