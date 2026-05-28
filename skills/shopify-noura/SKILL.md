@@ -22,30 +22,34 @@ Do not use this for general Shopify app/theme development unless the task become
 
 ## Operating Playbook
 
-1. **Classify the task**
+1. **Inspect available context**
+   - Read the controlling issue, linked work, conversation, workspace files, and handover/reference material before choosing a tool.
+   - Use existing trusted store mappings or target identifiers only when they resolve to one exact store or resource.
+   - If required context or access is unavailable, say what could not be inspected and continue with the safest fallback.
+2. **Classify the task**
    - Read-only: inspect, list, summarize, compare, report.
    - Revenue-impacting read: order/customer data, financial details, refunds, PII.
    - Mutation: create, update, delete, publish, discount, price, inventory, fulfillment, refund.
-2. **Collect minimum inputs**
+3. **Collect minimum inputs**
    - Store domain, not only a nickname.
    - Authentication path and required Shopify scopes.
    - Exact target identifiers: handle, SKU, variant ID, order ID, discount code, collection, location, or date window.
    - Business values: price, currency, quantity, campaign terms, start/end dates, timezone, usage limits, eligibility, and desired output format.
-3. **Choose the tool path**
+4. **Choose the tool path**
    - Store execution now: use `shopify-use-shopify-cli`; keep the flow in `shopify store auth --store ... --scopes ...` and `shopify store execute --store ...`.
    - Operation design only: use `shopify-admin` and validate generated Admin GraphQL before presenting it.
    - App, theme, extension, or config work: route to the matching Shopify skill.
-4. **Validate readiness**
+5. **Validate readiness**
    - Confirm the specialized Shopify tool or CLI path is available before relying on it.
    - Confirm auth, store access, and minimum scopes are ready or tell the user exactly what is missing.
    - If the preferred tool is unavailable, state the blocker and give the safest fallback; do not silently switch to broader access or manual guesses.
-5. **Apply safety gates**
+6. **Apply safety gates**
    - No mutation without showing the exact store, target, values, scopes, and likely impact, then receiving explicit confirmation.
    - No invented defaults for prices, discounts, eligibility, dates, markets, usage limits, or customer/product scope.
    - No store nickname execution unless a trusted mapping resolves it to a single store domain.
    - No broad fallback scopes because they are faster; use the minimum validated scopes.
    - Redact order/customer PII by default unless sensitive fields are necessary and authorized.
-6. **Execute or respond**
+7. **Execute or respond**
    - For reads, summarize the result in the requested format and note the time window/timezone used.
    - For writes, execute only after the confirmation gate, then verify with Shopify operation evidence: mutation result, `userErrors`, operation ID, or a read-back of the changed resource.
    - If access or required inputs are missing, stop with a concise missing-input checklist.
