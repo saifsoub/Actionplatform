@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
+import { getTrialWorkspaceFromSearch } from "@/lib/trial-workspaces"
 
 const formSchema = z.object({
   username: z.email(),
@@ -36,6 +37,10 @@ export const Route = createFileRoute("/login")({
   component: Login,
   beforeLoad: async () => {
     if (isLoggedIn()) {
+      const trialWorkspace = getTrialWorkspaceFromSearch(window.location.search)
+      if (trialWorkspace) {
+        throw redirect({ href: trialWorkspace.postLoginHref })
+      }
       throw redirect({
         to: "/",
       })
@@ -44,7 +49,7 @@ export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       {
-        title: "Log In - FastAPI Template",
+        title: "Log In - DoneAi",
       },
     ],
   }),
@@ -52,6 +57,7 @@ export const Route = createFileRoute("/login")({
 
 function Login() {
   const { loginMutation } = useAuth()
+  const trialWorkspace = getTrialWorkspaceFromSearch(window.location.search)
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     mode: "onBlur",
@@ -76,6 +82,11 @@ function Login() {
         >
           <div className="flex flex-col items-center gap-2 text-center">
             <h1 className="text-2xl font-bold">Login to your account</h1>
+            {trialWorkspace && (
+              <p className="text-sm text-muted-foreground">
+                Continue into the {trialWorkspace.displayName} guided workspace.
+              </p>
+            )}
           </div>
 
           <div className="grid gap-4">
@@ -131,9 +142,12 @@ function Login() {
 
           <div className="text-center text-sm">
             Don't have an account yet?{" "}
-            <RouterLink to="/signup" className="underline underline-offset-4">
+            <a
+              href={trialWorkspace?.signupHref ?? "/signup"}
+              className="underline underline-offset-4"
+            >
               Sign up
-            </RouterLink>
+            </a>
           </div>
         </form>
       </Form>
