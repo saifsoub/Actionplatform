@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { useNavigate } from "@tanstack/react-router"
 import { getTrialWorkspaceFromSearch } from "@/lib/trial-workspaces"
 
 const ROLES = [
@@ -50,7 +49,6 @@ interface ProfileData {
 }
 
 export default function Onboarding() {
-  const navigate = useNavigate()
   const trialWorkspace = getTrialWorkspaceFromSearch(window.location.search)
   const isFinancialOpsTrial =
     trialWorkspace?.slug === "financial_ops-2940387048"
