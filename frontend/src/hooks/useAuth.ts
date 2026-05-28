@@ -8,11 +8,16 @@ import {
   type UserRegister,
   UsersService,
 } from "@/client"
+import { getTrialWorkspaceFromSearch } from "@/lib/trial-workspaces"
 import { handleError } from "@/utils"
 import useCustomToast from "./useCustomToast"
 
 const isLoggedIn = () => {
   return localStorage.getItem("access_token") !== null
+}
+
+const getCurrentTrialWorkspace = () => {
+  return getTrialWorkspaceFromSearch(window.location.search)
 }
 
 const useAuth = () => {
@@ -30,6 +35,11 @@ const useAuth = () => {
     mutationFn: (data: UserRegister) =>
       UsersService.registerUser({ requestBody: data }),
     onSuccess: () => {
+      const trialWorkspace = getCurrentTrialWorkspace()
+      if (trialWorkspace) {
+        window.location.href = trialWorkspace.loginHref
+        return
+      }
       navigate({ to: "/login" })
     },
     onError: handleError.bind(showErrorToast),
@@ -48,6 +58,11 @@ const useAuth = () => {
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: () => {
+      const trialWorkspace = getCurrentTrialWorkspace()
+      if (trialWorkspace) {
+        window.location.href = trialWorkspace.postLoginHref
+        return
+      }
       navigate({ to: "/" })
     },
     onError: handleError.bind(showErrorToast),

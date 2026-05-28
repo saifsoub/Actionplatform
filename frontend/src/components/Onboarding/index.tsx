@@ -1,8 +1,45 @@
 import { useState } from "react"
-import { useNavigate } from "@tanstack/react-router"
+import { getTrialWorkspaceFromSearch } from "@/lib/trial-workspaces"
 
-const ROLES = ["Founder / CEO", "Product Manager", "Engineer", "Investor", "Consultant", "Creator", "Student", "Other"]
-const DOMAINS = ["SaaS / Tech", "E-commerce", "Finance / Fintech", "Healthcare", "Real Estate", "Education", "Media / Content", "Web3 / Crypto", "Other"]
+const ROLES = [
+  "Founder / CEO",
+  "Product Manager",
+  "Engineer",
+  "Investor",
+  "Consultant",
+  "Creator",
+  "Student",
+  "Other",
+]
+const DOMAINS = [
+  "SaaS / Tech",
+  "E-commerce",
+  "Finance / Fintech",
+  "Healthcare",
+  "Real Estate",
+  "Education",
+  "Media / Content",
+  "Web3 / Crypto",
+  "Other",
+]
+const FINANCE_OPS_ROLES = [
+  "Controller",
+  "VP Finance",
+  "AP / AR Lead",
+  "Revenue Operations",
+  "Finance Operations",
+  "Founder / CEO",
+  "Other",
+]
+const FINANCE_OPS_DOMAINS = [
+  "Accounts payable",
+  "Accounts receivable",
+  "Month-end close",
+  "Cash operations",
+  "Vendor management",
+  "Customer collections",
+  "Other",
+]
 
 interface ProfileData {
   role: string
@@ -12,7 +49,9 @@ interface ProfileData {
 }
 
 export default function Onboarding() {
-  const navigate = useNavigate()
+  const trialWorkspace = getTrialWorkspaceFromSearch(window.location.search)
+  const isFinancialOpsTrial =
+    trialWorkspace?.slug === "financial_ops-2940387048"
   const [step, setStep] = useState(0)
   const [data, setData] = useState<ProfileData>({
     role: "",
@@ -25,31 +64,51 @@ export default function Onboarding() {
   const steps = [
     {
       key: "role" as const,
-      title: "What best describes you?",
-      subtitle: "Your council will calibrate their advice to your context.",
+      title: isFinancialOpsTrial
+        ? "Set up your Financial Ops workspace"
+        : "What best describes you?",
+      subtitle: isFinancialOpsTrial
+        ? "Tune DoneAi around the finance operations queues your team wants to clear first."
+        : "Your council will calibrate their advice to your context.",
       type: "chips",
-      options: ROLES,
+      options: isFinancialOpsTrial ? FINANCE_OPS_ROLES : ROLES,
     },
     {
       key: "domain" as const,
-      title: "What domain are you operating in?",
-      subtitle: "This helps Cipher, Atlas, and Kai stay relevant to your world.",
+      title: isFinancialOpsTrial
+        ? "Which queue should DoneAi understand first?"
+        : "What domain are you operating in?",
+      subtitle: isFinancialOpsTrial
+        ? "Pick the operating lane that matters most for this trial workspace."
+        : "This helps Cipher, Atlas, and Kai stay relevant to your world.",
       type: "chips",
-      options: DOMAINS,
+      options: isFinancialOpsTrial ? FINANCE_OPS_DOMAINS : DOMAINS,
     },
     {
       key: "biggest_challenge" as const,
-      title: "What's your biggest challenge right now?",
-      subtitle: "One sentence is enough. The council will remember this.",
+      title: isFinancialOpsTrial
+        ? "Where is work getting stuck?"
+        : "What's your biggest challenge right now?",
+      subtitle: isFinancialOpsTrial
+        ? "A short description helps DoneAi frame the first queue review."
+        : "One sentence is enough. The council will remember this.",
       type: "text",
-      placeholder: "e.g. Finding product-market fit while keeping the team motivated…",
+      placeholder: isFinancialOpsTrial
+        ? "e.g. Invoice approvals are aging because owners miss supporting context."
+        : "e.g. Finding product-market fit while keeping the team motivated...",
     },
     {
       key: "goals" as const,
-      title: "What do you want to achieve in the next 90 days?",
-      subtitle: "Sage will anchor every daily briefing to this.",
+      title: isFinancialOpsTrial
+        ? "What would a useful first review produce?"
+        : "What do you want to achieve in the next 90 days?",
+      subtitle: isFinancialOpsTrial
+        ? "Name the outcome you want from the guided workspace."
+        : "Sage will anchor every daily briefing to this.",
       type: "text",
-      placeholder: "e.g. Launch v1, hit $10k MRR, close my first 5 enterprise deals…",
+      placeholder: isFinancialOpsTrial
+        ? "e.g. A prioritized exception list with owners and approved follow-up drafts."
+        : "e.g. Launch v1, hit $10k MRR, close my first 5 enterprise deals...",
     },
   ]
 
@@ -68,57 +127,94 @@ export default function Onboarding() {
         },
         body: JSON.stringify({ ...data, onboarding_complete: true }),
       })
-      navigate({ to: "/" })
+      window.location.href = trialWorkspace
+        ? `/?workspace=${trialWorkspace.slug}`
+        : "/"
     } catch {
       setSaving(false)
     }
   }
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #080814 0%, #0d0d1f 100%)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "24px",
-      fontFamily: "system-ui, sans-serif",
-    }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #080814 0%, #0d0d1f 100%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+        fontFamily: "system-ui, sans-serif",
+      }}
+    >
       <div style={{ maxWidth: "520px", width: "100%" }}>
-
         {/* Progress bar */}
         <div style={{ display: "flex", gap: "8px", marginBottom: "40px" }}>
           {steps.map((_, i) => (
-            <div key={i} style={{
-              flex: 1,
-              height: "3px",
-              borderRadius: "999px",
-              background: i <= step ? "#00D4FF" : "#1a1a3a",
-              transition: "background 0.3s",
-            }} />
+            <div
+              key={i}
+              style={{
+                flex: 1,
+                height: "3px",
+                borderRadius: "999px",
+                background: i <= step ? "#00D4FF" : "#1a1a3a",
+                transition: "background 0.3s",
+              }}
+            />
           ))}
         </div>
 
         {/* Header */}
         <div style={{ marginBottom: "32px" }}>
-          <div style={{ color: "#00D4FF", fontSize: "12px", fontWeight: "700", letterSpacing: "1.5px", marginBottom: "8px" }}>
+          <div
+            style={{
+              color: "#00D4FF",
+              fontSize: "12px",
+              fontWeight: "700",
+              letterSpacing: "1.5px",
+              marginBottom: "8px",
+            }}
+          >
             STEP {step + 1} OF {steps.length}
           </div>
-          <h1 style={{ color: "white", fontSize: "26px", fontWeight: "800", margin: 0, lineHeight: "1.3" }}>
+          <h1
+            style={{
+              color: "white",
+              fontSize: "26px",
+              fontWeight: "800",
+              margin: 0,
+              lineHeight: "1.3",
+            }}
+          >
             {currentStep.title}
           </h1>
-          <p style={{ color: "#888", marginTop: "8px", fontSize: "14px", lineHeight: "1.6" }}>
+          <p
+            style={{
+              color: "#888",
+              marginTop: "8px",
+              fontSize: "14px",
+              lineHeight: "1.6",
+            }}
+          >
             {currentStep.subtitle}
           </p>
         </div>
 
         {/* Input */}
         {currentStep.type === "chips" && currentStep.options && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "32px" }}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "10px",
+              marginBottom: "32px",
+            }}
+          >
             {currentStep.options.map((opt) => {
               const selected = data[currentStep.key] === opt
               return (
                 <button
+                  type="button"
                   key={opt}
                   onClick={() => setData({ ...data, [currentStep.key]: opt })}
                   style={{
@@ -143,7 +239,9 @@ export default function Onboarding() {
         {currentStep.type === "text" && (
           <textarea
             value={data[currentStep.key]}
-            onChange={(e) => setData({ ...data, [currentStep.key]: e.target.value })}
+            onChange={(e) =>
+              setData({ ...data, [currentStep.key]: e.target.value })
+            }
             placeholder={currentStep.placeholder}
             rows={4}
             style={{
@@ -170,6 +268,7 @@ export default function Onboarding() {
         <div style={{ display: "flex", gap: "12px" }}>
           {step > 0 && (
             <button
+              type="button"
               onClick={() => setStep(step - 1)}
               style={{
                 padding: "12px 24px",
@@ -185,14 +284,19 @@ export default function Onboarding() {
             </button>
           )}
           <button
+            type="button"
             disabled={!canProceed || saving}
-            onClick={() => step < steps.length - 1 ? setStep(step + 1) : finish()}
+            onClick={() =>
+              step < steps.length - 1 ? setStep(step + 1) : finish()
+            }
             style={{
               flex: 1,
               padding: "12px 24px",
               borderRadius: "10px",
               border: "none",
-              background: canProceed ? "linear-gradient(135deg, #00D4FF, #0088bb)" : "#1a1a3a",
+              background: canProceed
+                ? "linear-gradient(135deg, #00D4FF, #0088bb)"
+                : "#1a1a3a",
               color: canProceed ? "white" : "#555",
               fontSize: "14px",
               fontWeight: "700",
@@ -200,14 +304,25 @@ export default function Onboarding() {
               transition: "all 0.2s",
             }}
           >
-            {saving ? "Saving…" : step < steps.length - 1 ? "Continue →" : "Enter the Platform →"}
+            {saving
+              ? "Saving..."
+              : step < steps.length - 1
+                ? "Continue"
+                : trialWorkspace
+                  ? "Enter workspace"
+                  : "Enter the Platform"}
           </button>
         </div>
 
         {/* Skip */}
         {step === 0 && (
           <button
-            onClick={() => navigate({ to: "/" })}
+            type="button"
+            onClick={() => {
+              window.location.href = trialWorkspace
+                ? `/?workspace=${trialWorkspace.slug}`
+                : "/"
+            }}
             style={{
               width: "100%",
               marginTop: "16px",
@@ -222,7 +337,6 @@ export default function Onboarding() {
             Skip for now
           </button>
         )}
-
       </div>
     </div>
   )

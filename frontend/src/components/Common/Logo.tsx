@@ -1,11 +1,6 @@
 import { Link } from "@tanstack/react-router"
 
-import { useTheme } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
-import icon from "/assets/images/fastapi-icon.svg"
-import iconLight from "/assets/images/fastapi-icon-light.svg"
-import logo from "/assets/images/fastapi-logo.svg"
-import logoLight from "/assets/images/fastapi-logo-light.svg"
 
 interface LogoProps {
   variant?: "full" | "icon" | "responsive"
@@ -18,38 +13,28 @@ export function Logo({
   className,
   asLink = true,
 }: LogoProps) {
-  const { resolvedTheme } = useTheme()
-  const isDark = resolvedTheme === "dark"
-
-  const fullLogo = isDark ? logoLight : logo
-  const iconLogo = isDark ? iconLight : icon
-
   const content =
     variant === "responsive" ? (
-      <>
-        <img
-          src={fullLogo}
-          alt="FastAPI"
+      <span className="flex items-center gap-2">
+        <LogoMark className="size-8 group-data-[collapsible=icon]:size-5" />
+        <span
           className={cn(
-            "h-6 w-auto group-data-[collapsible=icon]:hidden",
+            "font-semibold text-foreground group-data-[collapsible=icon]:hidden",
             className,
           )}
-        />
-        <img
-          src={iconLogo}
-          alt="FastAPI"
-          className={cn(
-            "size-5 hidden group-data-[collapsible=icon]:block",
-            className,
-          )}
-        />
-      </>
+        >
+          DoneAi
+        </span>
+      </span>
+    ) : variant === "full" ? (
+      <span className={cn("flex items-center gap-3", className)}>
+        <LogoMark className="size-12" />
+        <span className="text-2xl font-semibold tracking-tight text-foreground">
+          DoneAi
+        </span>
+      </span>
     ) : (
-      <img
-        src={variant === "full" ? fullLogo : iconLogo}
-        alt="FastAPI"
-        className={cn(variant === "full" ? "h-6 w-auto" : "size-5", className)}
-      />
+      <LogoMark className={cn("size-5", className)} />
     )
 
   if (!asLink) {
@@ -57,4 +42,19 @@ export function Logo({
   }
 
   return <Link to="/">{content}</Link>
+}
+
+function LogoMark({ className }: { className?: string }) {
+  return (
+    <span
+      role="img"
+      aria-label="DoneAi"
+      className={cn(
+        "inline-flex items-center justify-center rounded-2xl bg-slate-950 text-sm font-semibold text-white shadow-sm dark:bg-white dark:text-slate-950",
+        className,
+      )}
+    >
+      D
+    </span>
+  )
 }
