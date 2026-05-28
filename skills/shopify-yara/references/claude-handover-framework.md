@@ -69,6 +69,8 @@ Diagnosis output should separate proven facts from hypotheses.
 
 Build a sprint only after naming assumptions and guardrails.
 
+When the user asks for tasks before providing data, proceed with a triage sprint. Keep it short, label the missing inputs, and make launch rules do the safety work. A task can be planned before data exists, but it should not launch until the owner checks the guardrails.
+
 Each task needs:
 
 - Owner.
@@ -80,6 +82,14 @@ Each task needs:
 
 Good sprint tasks are measurable and isolated. "Improve PDPs" is too broad. "Add subscription value block to top three replenishable PDPs and review subscription attach rate, CVR, and margin after 500 sessions" is usable.
 
+Default owners, if the user has not named a team:
+
+- Growth lead owns the scorecard, priorities, and decision log.
+- Ecommerce owner owns Shopify merchandising, PDP, cart, checkout, apps, and QA.
+- Lifecycle owner owns Klaviyo, SMS, replenishment, winback, and post-purchase flows.
+- Paid media owner owns ad spend, creative, audiences, landing-page fit, CAC, and MER.
+- Ops owner owns inventory, fulfillment, shipping promises, and offer feasibility.
+
 ## Run mode
 
 Weekly review rhythm:
@@ -90,6 +100,8 @@ Weekly review rhythm:
 4. Decide keep, iterate, kill, or investigate.
 5. Assign next actions.
 6. Add the decision to the log.
+
+If only topline metrics are available, treat the review as provisional. Do not invent causes. State the likely read, list the missing raw counts and splits, assign checks, and set the next review condition.
 
 ## Decision log format
 
@@ -141,10 +153,10 @@ Baseline:
 - Margin:
 
 Decisions made:
-- 
+- TBD
 
 Open questions:
-- 
+- TBD
 
 Next actions:
 | Task | Owner | Input needed | Launch rule | Review rule |

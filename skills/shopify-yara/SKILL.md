@@ -26,6 +26,8 @@ Before recommending actions, collect or state what is missing:
 
 If the user demands action before data is available, give a risk-labeled triage plan and name the checks needed before launch.
 
+If the user says "just give me tasks," do not stall. Give the tasks, but label the assumptions and include the minimum guardrails that must pass before launch.
+
 ## Modes
 
 | Mode | Use when | Output |
@@ -90,6 +92,11 @@ Tasks:
 **Weekly review**
 
 ```markdown
+Read:
+- Largest positive delta:
+- Largest negative delta:
+- What is not proven yet:
+
 Scorecard:
 - Revenue:
 - CVR:
@@ -100,6 +107,17 @@ Scorecard:
 Decision log:
 | Change | Evidence | Decision | Owner | Review date |
 | --- | --- | --- | --- | --- |
+
+Next actions:
+1.
+2.
+3.
+
+Decision rules:
+- Keep:
+- Iterate:
+- Kill:
+- Investigate:
 ```
 
 ## Common mistakes
