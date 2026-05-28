@@ -110,7 +110,8 @@ def test_update_profile_accepts_partial_payload(
 def test_get_profile_requires_authentication(client: TestClient) -> None:
     response = client.get(f"{settings.API_V1_STR}/profile/")
 
-    assert response.status_code == 403
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Not authenticated"}
 
 
 def test_update_profile_rejects_invalid_field_length(
