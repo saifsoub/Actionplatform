@@ -1,9 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import {
-  createFileRoute,
-  Link as RouterLink,
-  redirect,
-} from "@tanstack/react-router"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { AuthLayout } from "@/components/Common/AuthLayout"
@@ -19,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
+import { getTrialWorkspaceFromSearch } from "@/lib/trial-workspaces"
 
 const formSchema = z
   .object({
@@ -43,6 +40,10 @@ export const Route = createFileRoute("/signup")({
   component: SignUp,
   beforeLoad: async () => {
     if (isLoggedIn()) {
+      const trialWorkspace = getTrialWorkspaceFromSearch(window.location.search)
+      if (trialWorkspace) {
+        throw redirect({ href: trialWorkspace.postLoginHref })
+      }
       throw redirect({
         to: "/",
       })
@@ -51,7 +52,7 @@ export const Route = createFileRoute("/signup")({
   head: () => ({
     meta: [
       {
-        title: "Sign Up - FastAPI Template",
+        title: "Sign Up - DoneAi",
       },
     ],
   }),
@@ -59,6 +60,7 @@ export const Route = createFileRoute("/signup")({
 
 function SignUp() {
   const { signUpMutation } = useAuth()
+  const trialWorkspace = getTrialWorkspaceFromSearch(window.location.search)
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     mode: "onBlur",
@@ -88,6 +90,11 @@ function SignUp() {
         >
           <div className="flex flex-col items-center gap-2 text-center">
             <h1 className="text-2xl font-bold">Create an account</h1>
+            {trialWorkspace && (
+              <p className="text-sm text-muted-foreground">
+                Continue into the {trialWorkspace.displayName} guided workspace.
+              </p>
+            )}
           </div>
 
           <div className="grid gap-4">
@@ -176,9 +183,12 @@ function SignUp() {
 
           <div className="text-center text-sm">
             Already have an account?{" "}
-            <RouterLink to="/login" className="underline underline-offset-4">
+            <a
+              href={trialWorkspace?.loginHref ?? "/login"}
+              className="underline underline-offset-4"
+            >
               Log in
-            </RouterLink>
+            </a>
           </div>
         </form>
       </Form>
