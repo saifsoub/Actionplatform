@@ -60,7 +60,7 @@ These readers track AI, crypto, startups, or fast-moving markets. They need sign
 
 - Pain: feeds are full of confident takes that age badly.
 - What earns attention: measured market reads, daily signal posts, and clear explanations of what changed and why it matters.
-- Desired action: follow for signal, subscribe to updates, or use Sage and Cipher-style workflows.
+- Desired action: follow for signal, subscribe to updates, or try daily intelligence and market-read workflows.
 
 ## Content pillars
 

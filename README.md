@@ -224,6 +224,10 @@ General development docs: [development.md](./development.md).
 
 This includes using Docker Compose, custom local domains, `.env` configurations, etc.
 
+## Project docs
+
+Project docs: [docs/README.md](./docs/README.md).
+
 ## Release Notes
 
 Check the file [release-notes.md](./release-notes.md).
