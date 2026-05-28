@@ -32,12 +32,24 @@ Because this change is documentation-only, QA focuses on repository verification
 
 3. If the test command cannot run because the environment lacks required dependencies or registry access, record the exact failure in Linear and do not move the issue to Done.
 
+## Current QA result
+
+Executed on 2026-05-28 in the Cursor cloud workspace:
+
+| Command | Result |
+| --- | --- |
+| `git diff --check` | Passed with exit code 0 before commit. |
+| `npm run test` | Failed before test execution: `sh: 1: bun: not found`. |
+| `node --version && npm --version && docker --version` | Node and npm are available (`v22.22.3`, `10.9.7`), but Docker is unavailable: `docker: command not found`. |
+
+The repository's `frontend/README.md` says Playwright tests need `docker compose up -d --wait backend` before `bunx playwright test`. This environment is missing both `bun` and Docker, so QA cannot pass here without environment setup.
+
 ## Done gate
 
 Move SEI-26 to Done only when all of the following are true:
 
 - The deliverable artifact is committed and linked from a pull request.
-- The verification command has passed, or a reviewer explicitly accepts a documented environment blocker.
+- The verification command has passed, or a reviewer explicitly accepts the documented environment blocker above.
 - A Linear comment contains the proof links and QA result.
 
 ## Linear comment template
@@ -47,7 +59,8 @@ Move SEI-26 to Done only when all of the following are true:
 
 - Deliverable artifact: `docs/SEI-26-FIRST-DELIVERABLE.md`
 - Pull request: <PR link>
-- QA: `npm run test` -> <pass/fail and exact result>
+- QA: `npm run test` -> failed before test execution: `sh: 1: bun: not found`
+- Environment blocker: Docker is also unavailable (`docker: command not found`), but the frontend README requires Docker Compose backend before Playwright tests.
 
-Done gate: move SEI-26 to Done only after QA is accepted.
+Done gate: do not move SEI-26 to Done until QA passes in a prepared environment or a reviewer accepts this documented blocker.
 ```
