@@ -8,6 +8,10 @@ test("financial operations try workspace presents a credible prospect landing pa
   await page.goto("/try/financial_ops-2940387048")
 
   await expect(page.getByTestId("not-found")).toHaveCount(0)
+  await expect(page).toHaveTitle("DoneAi financial operations workspace")
+  await expect(page.locator('link[rel="icon"][href="/vite.svg"]')).toHaveCount(
+    0,
+  )
   await expect(
     page.getByRole("heading", {
       name: "AI operators for financial operations teams",
