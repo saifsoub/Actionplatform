@@ -54,6 +54,8 @@ Give each shipped item one label:
 
 ## Common High-Impact Fixes
 
+Use this library only after naming the constraint. Each fix must connect to a segment, product, funnel step, or data gap from the diagnosis.
+
 ### Conversion Rate
 
 - Match paid ad promise to landing page headline and first-screen product proof.
@@ -98,7 +100,7 @@ Give each shipped item one label:
 ## Ranked Action Plan
 | Rank | Action | DIMA Rationale | Owner | KPI | Guardrail | Effort/Risk | Decision Date |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 |  | Diagnose/Instrument/Move fast/Automate rationale |  |  |  |  |  |
+| 1 | QA and fix mobile checkout surprises for top paid products | Diagnose checkout leakage; instrument abandonment and CVR by device; move fast on reversible copy/payment/shipping fixes; automate a weekly checkout QA checklist if it works | Growth operator + theme owner | Checkout completion rate | AOV, MER, support complaints | Medium effort / low-to-medium risk | Friday |
 
 ## This Week's Loop
 - Main bet:

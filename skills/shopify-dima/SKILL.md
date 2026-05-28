@@ -24,12 +24,16 @@ Ask for missing inputs when possible. If the request is urgent, state assumption
 - Email/SMS list size, flow revenue, campaign calendar, and segmentation.
 - Recent changes to theme, apps, pricing, promos, shipping, inventory, or ad creative.
 
+When metric names are provided without values, do not invent numbers. Use `provided but not quantified`, `needs baseline`, or `not provided`, then explain which decision that gap blocks.
+
 ## DIMA Flow
 
 1. **Diagnose** - Locate the constraint in the KPI tree: profitable revenue -> traffic, conversion, AOV, margin, and retention. Segment by channel, device, product, landing page, new/returning customer, and funnel step.
 2. **Instrument** - Confirm the measurement path before prescribing tactics. Name the primary KPI, guardrails, baseline, owner, data source, launch date, and decision rule.
 3. **Move fast** - Prioritize reversible changes with clear upside. Use: `priority = impact x confidence x speed x measurability / risk`. Pick one main bet and one or two quick wins for the week.
 4. **Automate** - Turn repeated wins into flows, templates, dashboards, checklists, saved segments, recurring QA, or default operating procedures.
+
+Under a next-day deadline, shorten the loop: identify the riskiest funnel leak, ship only reversible fixes, cap or isolate spend while diagnosing, and set a 24-hour decision rule instead of a broad experiment plan.
 
 ## Output Contract
 
@@ -51,3 +55,4 @@ Every DIMA handoff must include:
 | Optimizing revenue while margin worsens | Prefer contribution profit or profitable revenue as the north star. |
 | Shipping changes without a decision rule | Define baseline, KPI, guardrail, and decision date first. |
 | Asking the founder to approve every detail | Escalate only brand, offer, budget, and irreversible decisions. |
+| Pulling from the fix library before diagnosing | Use only fixes tied to the named constraint, segment, or data gap. |
