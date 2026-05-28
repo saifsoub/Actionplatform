@@ -10,7 +10,21 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="bg-muted dark:bg-zinc-900 relative hidden lg:flex lg:items-center lg:justify-center">
-        <Logo variant="full" className="h-16" asLink={false} />
+        <div className="max-w-md space-y-6 p-10">
+          <Logo variant="full" asLink={false} />
+          <div className="space-y-3">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Guided operations workspace
+            </p>
+            <h2 className="text-3xl font-semibold tracking-tight">
+              Review the evidence, approve the next action, and keep control.
+            </h2>
+            <p className="text-muted-foreground leading-7">
+              DoneAi gives finance operations teams a focused entry point for
+              queues, owner follow-up, and human-approved recommendations.
+            </p>
+          </div>
+        </div>
       </div>
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex justify-end">

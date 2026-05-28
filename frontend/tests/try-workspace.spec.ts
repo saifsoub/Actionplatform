@@ -68,6 +68,8 @@ test("signup page acknowledges the selected trial workspace", async ({
   await expect(
     page.getByText("Continue into the Financial Ops guided workspace."),
   ).toBeVisible()
+  await expect(page.getByText("Full Stack FastAPI Template")).toHaveCount(0)
+  await expect(page.getByText("DoneAi").first()).toBeVisible()
   await expect(page.getByRole("link", { name: "Log in" })).toHaveAttribute(
     "href",
     "/login?workspace=financial_ops-2940387048",
@@ -78,10 +80,29 @@ test("signup page acknowledges the selected trial workspace", async ({
   await expect(
     page.getByText("Continue into the Financial Ops guided workspace."),
   ).toBeVisible()
+  await expect(page.getByText("Full Stack FastAPI Template")).toHaveCount(0)
   await expect(page.getByRole("link", { name: "Sign up" })).toHaveAttribute(
     "href",
     "/signup?workspace=financial_ops-2940387048",
   )
+})
+
+test("trial onboarding stays specific to the financial ops workspace", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("access_token", "trial-test-token")
+  })
+
+  await page.goto("/onboarding?workspace=financial_ops-2940387048")
+
+  await expect(
+    page.getByRole("heading", { name: "Set up your Financial Ops workspace" }),
+  ).toBeVisible()
+  await expect(
+    page.getByText("Tune DoneAi around the finance operations queues"),
+  ).toBeVisible()
+  await expect(page.getByRole("button", { name: /^Continue/ })).toBeVisible()
 })
 
 test("unknown trial workspace slugs do not render an official preview", async ({

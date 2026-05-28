@@ -1,8 +1,46 @@
 import { useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
+import { getTrialWorkspaceFromSearch } from "@/lib/trial-workspaces"
 
-const ROLES = ["Founder / CEO", "Product Manager", "Engineer", "Investor", "Consultant", "Creator", "Student", "Other"]
-const DOMAINS = ["SaaS / Tech", "E-commerce", "Finance / Fintech", "Healthcare", "Real Estate", "Education", "Media / Content", "Web3 / Crypto", "Other"]
+const ROLES = [
+  "Founder / CEO",
+  "Product Manager",
+  "Engineer",
+  "Investor",
+  "Consultant",
+  "Creator",
+  "Student",
+  "Other",
+]
+const DOMAINS = [
+  "SaaS / Tech",
+  "E-commerce",
+  "Finance / Fintech",
+  "Healthcare",
+  "Real Estate",
+  "Education",
+  "Media / Content",
+  "Web3 / Crypto",
+  "Other",
+]
+const FINANCE_OPS_ROLES = [
+  "Controller",
+  "VP Finance",
+  "AP / AR Lead",
+  "Revenue Operations",
+  "Finance Operations",
+  "Founder / CEO",
+  "Other",
+]
+const FINANCE_OPS_DOMAINS = [
+  "Accounts payable",
+  "Accounts receivable",
+  "Month-end close",
+  "Cash operations",
+  "Vendor management",
+  "Customer collections",
+  "Other",
+]
 
 interface ProfileData {
   role: string
@@ -13,6 +51,9 @@ interface ProfileData {
 
 export default function Onboarding() {
   const navigate = useNavigate()
+  const trialWorkspace = getTrialWorkspaceFromSearch(window.location.search)
+  const isFinancialOpsTrial =
+    trialWorkspace?.slug === "financial_ops-2940387048"
   const [step, setStep] = useState(0)
   const [data, setData] = useState<ProfileData>({
     role: "",
@@ -25,31 +66,51 @@ export default function Onboarding() {
   const steps = [
     {
       key: "role" as const,
-      title: "What best describes you?",
-      subtitle: "Your council will calibrate their advice to your context.",
+      title: isFinancialOpsTrial
+        ? "Set up your Financial Ops workspace"
+        : "What best describes you?",
+      subtitle: isFinancialOpsTrial
+        ? "Tune DoneAi around the finance operations queues your team wants to clear first."
+        : "Your council will calibrate their advice to your context.",
       type: "chips",
-      options: ROLES,
+      options: isFinancialOpsTrial ? FINANCE_OPS_ROLES : ROLES,
     },
     {
       key: "domain" as const,
-      title: "What domain are you operating in?",
-      subtitle: "This helps Cipher, Atlas, and Kai stay relevant to your world.",
+      title: isFinancialOpsTrial
+        ? "Which queue should DoneAi understand first?"
+        : "What domain are you operating in?",
+      subtitle: isFinancialOpsTrial
+        ? "Pick the operating lane that matters most for this trial workspace."
+        : "This helps Cipher, Atlas, and Kai stay relevant to your world.",
       type: "chips",
-      options: DOMAINS,
+      options: isFinancialOpsTrial ? FINANCE_OPS_DOMAINS : DOMAINS,
     },
     {
       key: "biggest_challenge" as const,
-      title: "What's your biggest challenge right now?",
-      subtitle: "One sentence is enough. The council will remember this.",
+      title: isFinancialOpsTrial
+        ? "Where is work getting stuck?"
+        : "What's your biggest challenge right now?",
+      subtitle: isFinancialOpsTrial
+        ? "A short description helps DoneAi frame the first queue review."
+        : "One sentence is enough. The council will remember this.",
       type: "text",
-      placeholder: "e.g. Finding product-market fit while keeping the team motivated…",
+      placeholder: isFinancialOpsTrial
+        ? "e.g. Invoice approvals are aging because owners miss supporting context."
+        : "e.g. Finding product-market fit while keeping the team motivated...",
     },
     {
       key: "goals" as const,
-      title: "What do you want to achieve in the next 90 days?",
-      subtitle: "Sage will anchor every daily briefing to this.",
+      title: isFinancialOpsTrial
+        ? "What would a useful first review produce?"
+        : "What do you want to achieve in the next 90 days?",
+      subtitle: isFinancialOpsTrial
+        ? "Name the outcome you want from the guided workspace."
+        : "Sage will anchor every daily briefing to this.",
       type: "text",
-      placeholder: "e.g. Launch v1, hit $10k MRR, close my first 5 enterprise deals…",
+      placeholder: isFinancialOpsTrial
+        ? "e.g. A prioritized exception list with owners and approved follow-up drafts."
+        : "e.g. Launch v1, hit $10k MRR, close my first 5 enterprise deals...",
     },
   ]
 
@@ -68,7 +129,7 @@ export default function Onboarding() {
         },
         body: JSON.stringify({ ...data, onboarding_complete: true }),
       })
-      navigate({ to: "/" })
+      window.location.href = trialWorkspace ? `/?workspace=${trialWorkspace.slug}` : "/"
     } catch {
       setSaving(false)
     }
@@ -200,14 +261,24 @@ export default function Onboarding() {
               transition: "all 0.2s",
             }}
           >
-            {saving ? "Saving…" : step < steps.length - 1 ? "Continue →" : "Enter the Platform →"}
+            {saving
+              ? "Saving..."
+              : step < steps.length - 1
+                ? "Continue"
+                : trialWorkspace
+                  ? "Enter workspace"
+                  : "Enter the Platform"}
           </button>
         </div>
 
         {/* Skip */}
         {step === 0 && (
           <button
-            onClick={() => navigate({ to: "/" })}
+            onClick={() => {
+              window.location.href = trialWorkspace
+                ? `/?workspace=${trialWorkspace.slug}`
+                : "/"
+            }}
             style={{
               width: "100%",
               marginTop: "16px",
