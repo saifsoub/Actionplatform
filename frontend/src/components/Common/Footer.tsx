@@ -4,9 +4,7 @@ export function Footer() {
   return (
     <footer className="border-t py-4 px-6">
       <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-        <p className="text-muted-foreground text-sm">
-          DoneAi - {currentYear}
-        </p>
+        <p className="text-muted-foreground text-sm">DoneAi - {currentYear}</p>
         <a
           href="mailto:hello@doneai.agency"
           className="text-muted-foreground hover:text-foreground text-sm transition-colors"

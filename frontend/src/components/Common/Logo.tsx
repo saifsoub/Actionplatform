@@ -47,6 +47,7 @@ export function Logo({
 function LogoMark({ className }: { className?: string }) {
   return (
     <span
+      role="img"
       aria-label="DoneAi"
       className={cn(
         "inline-flex items-center justify-center rounded-2xl bg-slate-950 text-sm font-semibold text-white shadow-sm dark:bg-white dark:text-slate-950",

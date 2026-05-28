@@ -127,57 +127,94 @@ export default function Onboarding() {
         },
         body: JSON.stringify({ ...data, onboarding_complete: true }),
       })
-      window.location.href = trialWorkspace ? `/?workspace=${trialWorkspace.slug}` : "/"
+      window.location.href = trialWorkspace
+        ? `/?workspace=${trialWorkspace.slug}`
+        : "/"
     } catch {
       setSaving(false)
     }
   }
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #080814 0%, #0d0d1f 100%)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "24px",
-      fontFamily: "system-ui, sans-serif",
-    }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #080814 0%, #0d0d1f 100%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+        fontFamily: "system-ui, sans-serif",
+      }}
+    >
       <div style={{ maxWidth: "520px", width: "100%" }}>
-
         {/* Progress bar */}
         <div style={{ display: "flex", gap: "8px", marginBottom: "40px" }}>
           {steps.map((_, i) => (
-            <div key={i} style={{
-              flex: 1,
-              height: "3px",
-              borderRadius: "999px",
-              background: i <= step ? "#00D4FF" : "#1a1a3a",
-              transition: "background 0.3s",
-            }} />
+            <div
+              key={i}
+              style={{
+                flex: 1,
+                height: "3px",
+                borderRadius: "999px",
+                background: i <= step ? "#00D4FF" : "#1a1a3a",
+                transition: "background 0.3s",
+              }}
+            />
           ))}
         </div>
 
         {/* Header */}
         <div style={{ marginBottom: "32px" }}>
-          <div style={{ color: "#00D4FF", fontSize: "12px", fontWeight: "700", letterSpacing: "1.5px", marginBottom: "8px" }}>
+          <div
+            style={{
+              color: "#00D4FF",
+              fontSize: "12px",
+              fontWeight: "700",
+              letterSpacing: "1.5px",
+              marginBottom: "8px",
+            }}
+          >
             STEP {step + 1} OF {steps.length}
           </div>
-          <h1 style={{ color: "white", fontSize: "26px", fontWeight: "800", margin: 0, lineHeight: "1.3" }}>
+          <h1
+            style={{
+              color: "white",
+              fontSize: "26px",
+              fontWeight: "800",
+              margin: 0,
+              lineHeight: "1.3",
+            }}
+          >
             {currentStep.title}
           </h1>
-          <p style={{ color: "#888", marginTop: "8px", fontSize: "14px", lineHeight: "1.6" }}>
+          <p
+            style={{
+              color: "#888",
+              marginTop: "8px",
+              fontSize: "14px",
+              lineHeight: "1.6",
+            }}
+          >
             {currentStep.subtitle}
           </p>
         </div>
 
         {/* Input */}
         {currentStep.type === "chips" && currentStep.options && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "32px" }}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "10px",
+              marginBottom: "32px",
+            }}
+          >
             {currentStep.options.map((opt) => {
               const selected = data[currentStep.key] === opt
               return (
                 <button
+                  type="button"
                   key={opt}
                   onClick={() => setData({ ...data, [currentStep.key]: opt })}
                   style={{
@@ -202,7 +239,9 @@ export default function Onboarding() {
         {currentStep.type === "text" && (
           <textarea
             value={data[currentStep.key]}
-            onChange={(e) => setData({ ...data, [currentStep.key]: e.target.value })}
+            onChange={(e) =>
+              setData({ ...data, [currentStep.key]: e.target.value })
+            }
             placeholder={currentStep.placeholder}
             rows={4}
             style={{
@@ -229,6 +268,7 @@ export default function Onboarding() {
         <div style={{ display: "flex", gap: "12px" }}>
           {step > 0 && (
             <button
+              type="button"
               onClick={() => setStep(step - 1)}
               style={{
                 padding: "12px 24px",
@@ -244,14 +284,19 @@ export default function Onboarding() {
             </button>
           )}
           <button
+            type="button"
             disabled={!canProceed || saving}
-            onClick={() => step < steps.length - 1 ? setStep(step + 1) : finish()}
+            onClick={() =>
+              step < steps.length - 1 ? setStep(step + 1) : finish()
+            }
             style={{
               flex: 1,
               padding: "12px 24px",
               borderRadius: "10px",
               border: "none",
-              background: canProceed ? "linear-gradient(135deg, #00D4FF, #0088bb)" : "#1a1a3a",
+              background: canProceed
+                ? "linear-gradient(135deg, #00D4FF, #0088bb)"
+                : "#1a1a3a",
               color: canProceed ? "white" : "#555",
               fontSize: "14px",
               fontWeight: "700",
@@ -272,6 +317,7 @@ export default function Onboarding() {
         {/* Skip */}
         {step === 0 && (
           <button
+            type="button"
             onClick={() => {
               window.location.href = trialWorkspace
                 ? `/?workspace=${trialWorkspace.slug}`
@@ -291,7 +337,6 @@ export default function Onboarding() {
             Skip for now
           </button>
         )}
-
       </div>
     </div>
   )
