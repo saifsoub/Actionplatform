@@ -49,7 +49,7 @@ The repository's `frontend/README.md` says Playwright tests need `docker compose
 Move SEI-26 to Done only when all of the following are true:
 
 - The deliverable artifact is committed and linked from a pull request.
-- The verification command has passed, or a reviewer explicitly accepts the documented environment blocker above.
+- The verification command has passed in an environment with the required test tooling.
 - A Linear comment contains the proof links and QA result.
 
 ## Linear comment template
@@ -62,5 +62,5 @@ Move SEI-26 to Done only when all of the following are true:
 - QA: `npm run test` -> failed before test execution: `sh: 1: bun: not found`
 - Environment blocker: Docker is also unavailable (`docker: command not found`), but the frontend README requires Docker Compose backend before Playwright tests.
 
-Done gate: do not move SEI-26 to Done until QA passes in a prepared environment or a reviewer accepts this documented blocker.
+Done gate: do not move SEI-26 to Done until QA passes in an environment with the required test tooling.
 ```
