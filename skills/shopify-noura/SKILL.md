@@ -35,15 +35,19 @@ Do not use this for general Shopify app/theme development unless the task become
    - Store execution now: use `shopify-use-shopify-cli`; keep the flow in `shopify store auth --store ... --scopes ...` and `shopify store execute --store ...`.
    - Operation design only: use `shopify-admin` and validate generated Admin GraphQL before presenting it.
    - App, theme, extension, or config work: route to the matching Shopify skill.
-4. **Apply safety gates**
+4. **Validate readiness**
+   - Confirm the specialized Shopify tool or CLI path is available before relying on it.
+   - Confirm auth, store access, and minimum scopes are ready or tell the user exactly what is missing.
+   - If the preferred tool is unavailable, state the blocker and give the safest fallback; do not silently switch to broader access or manual guesses.
+5. **Apply safety gates**
    - No mutation without showing the exact store, target, values, scopes, and likely impact, then receiving explicit confirmation.
    - No invented defaults for prices, discounts, eligibility, dates, markets, usage limits, or customer/product scope.
    - No store nickname execution unless a trusted mapping resolves it to a single store domain.
    - No broad fallback scopes because they are faster; use the minimum validated scopes.
    - Redact order/customer PII by default unless sensitive fields are necessary and authorized.
-5. **Execute or respond**
+6. **Execute or respond**
    - For reads, summarize the result in the requested format and note the time window/timezone used.
-   - For writes, execute only after the confirmation gate, then report the operation ID, changed fields, and any Shopify user errors.
+   - For writes, execute only after the confirmation gate, then verify with Shopify operation evidence: mutation result, `userErrors`, operation ID, or a read-back of the changed resource.
    - If access or required inputs are missing, stop with a concise missing-input checklist.
 
 ## Quick Reference

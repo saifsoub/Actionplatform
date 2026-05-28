@@ -13,7 +13,7 @@ Available context:
 
 ## RED-phase baseline findings
 
-Testing likely behavior without a dedicated skill surfaced these failure modes:
+This agent ran a RED-phase pressure scenario before creating the skill. The baseline asked how an agent would behave without a dedicated `shopify-noura` skill, using urgent product-price, order-reporting, and discount-creation prompts. That test surfaced these failure modes:
 
 1. **Urgent product price update**
    - Risk: treating urgency as authorization.
