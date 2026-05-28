@@ -37,7 +37,7 @@ Needs explicit confirmation in the current task:
 
 - Price, compare-at price, inventory quantity, cost, tax, or market changes.
 - Publishing, archiving, deleting, redirecting handles, or sales-channel changes.
-- Creating, activating, pausing, or stacking discounts.
+- Creating, editing, deleting, duplicating, activating, pausing, or stacking campaigns, discounts, or codes, including values, dates, targets, eligibility, limits, and market/currency scope.
 - Refunds, cancellations, fulfillment holds, address edits, customer emails, fraud decisions, or return approvals.
 - Bulk edits affecting more than 10 named products, variants, or orders, or any unnamed set.
 
