@@ -87,13 +87,46 @@ function authHeaders() {
   }
 }
 
+function padDatePart(value: number) {
+  return value.toString().padStart(2, "0")
+}
+
 function toLocalInputValue(date: Date) {
-  return date.toISOString().slice(0, 16)
+  return `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(
+    date.getDate(),
+  )}T${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}`
 }
 
 function parseCount(value: string) {
   const parsed = Number.parseInt(value, 10)
   return Number.isNaN(parsed) ? 0 : parsed
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
+}
+
+function validationIssueToMessage(issue: unknown) {
+  if (!isRecord(issue)) return "Invalid request"
+  const message = typeof issue.msg === "string" ? issue.msg : "Invalid value"
+  const path = Array.isArray(issue.loc)
+    ? issue.loc.map((part) => String(part)).join(".")
+    : ""
+  return path ? `${path}: ${message}` : message
+}
+
+function apiErrorToMessage(body: unknown, fallback: string) {
+  if (!isRecord(body) || !("detail" in body)) return fallback
+  const detail = body.detail
+  if (typeof detail === "string") return detail
+  if (Array.isArray(detail))
+    return detail.map(validationIssueToMessage).join("; ")
+  return fallback
+}
+
+async function responseErrorMessage(response: Response, fallback: string) {
+  const body: unknown = await response.json().catch(() => null)
+  return apiErrorToMessage(body, fallback)
 }
 
 function defaultPostForm(): PostForm {
@@ -218,8 +251,12 @@ export default function Engagement() {
         }),
       })
       if (!response.ok) {
-        const body = await response.json().catch(() => null)
-        setError(body?.detail ?? `Failed to save post (${response.status}).`)
+        setError(
+          await responseErrorMessage(
+            response,
+            `Failed to save post (${response.status}).`,
+          ),
+        )
         return
       }
       setPostForm(defaultPostForm())
@@ -266,8 +303,12 @@ export default function Engagement() {
         },
       )
       if (!response.ok) {
-        const body = await response.json().catch(() => null)
-        setError(body?.detail ?? `Failed to record check (${response.status}).`)
+        setError(
+          await responseErrorMessage(
+            response,
+            `Failed to record check (${response.status}).`,
+          ),
+        )
         return
       }
       setCheckForm(defaultCheckForm(checkForm.post_id))
@@ -295,9 +336,11 @@ export default function Engagement() {
         },
       )
       if (!response.ok) {
-        const body = await response.json().catch(() => null)
         setError(
-          body?.detail ?? `Failed to update follow-up (${response.status}).`,
+          await responseErrorMessage(
+            response,
+            `Failed to update follow-up (${response.status}).`,
+          ),
         )
         return
       }
