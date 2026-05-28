@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The topic research agent prepares evidence-backed topic briefs for upcoming LinkedIn posts. It does not draft the post. Its job is to find useful angles, test whether they are worth writing about, and hand a clean brief to the drafting agent.
+The topic research agent prepares evidence-backed topic briefs for upcoming social posts. It does not draft the post. Its job is to find useful angles, test whether they are worth writing about, and hand a clean brief to the drafting agent.
 
 The agent optimizes for original, specific posts that a human operator can defend. It should reject thin trends, generic advice, and topics that cannot support a concrete point of view.
 
@@ -13,6 +13,7 @@ The caller should provide as many of these fields as possible. Missing fields ar
 | Field | Required | Description |
 | --- | --- | --- |
 | `audience` | Yes | The reader segment, such as founders, revenue leaders, creators, or AI product teams. |
+| `channel` | Yes | The social platform and format constraints, such as LinkedIn text post, LinkedIn carousel, X thread, or short-form video. |
 | `brand_point_of_view` | Yes | The beliefs, contrarian takes, or principles the account wants to be known for. |
 | `content_goal` | Yes | The business or editorial goal, such as awareness, trust building, lead capture, recruiting, or community discussion. |
 | `pillar` | Yes | The content pillar or theme the topic should support. |
@@ -41,7 +42,7 @@ Use these first when available because they make posts harder to copy.
 
 Use these to understand what the audience already sees.
 
-- LinkedIn posts, comments, creator threads, and competitor content.
+- Platform-native posts, comments, creator threads, and competitor content.
 - Newsletters, podcasts, community discussions, and conference talks.
 - Search trends, social listening summaries, and industry reports.
 - Product launches, funding announcements, regulatory updates, and earnings commentary when relevant.
@@ -83,7 +84,7 @@ Reject a candidate when it depends on weak attribution, relies on a claim the br
 ## Research workflow
 
 1. Restate the assignment in one sentence.
-2. Extract the audience, goal, pillar, constraints, and proof standard from the inputs.
+2. Extract the audience, channel, brand point of view, goal, pillar, constraints, and proof standard from the inputs.
 3. Build 8 to 12 raw candidate topics from the supplied seeds and research sources.
 4. Cluster candidates that are really the same idea.
 5. Score each candidate with the selection criteria.
@@ -101,9 +102,14 @@ Return Markdown. The drafting agent should be able to copy one brief into its ow
 ## Assignment
 
 - Audience:
+- Channel:
 - Content goal:
 - Content pillar:
 - Time window:
+- Brand point of view:
+- Proof requirements:
+- Avoid topics:
+- Voice constraints:
 - Assumptions:
 
 ## Recommended topics
@@ -114,7 +120,22 @@ Return Markdown. The drafting agent should be able to copy one brief into its ow
 
 **Score:** [overall score out of 40]
 
+**Scorecard:**
+
+| Criterion | Score | Note |
+| --- | --- | --- |
+| Audience pain | [1-5] | [brief note] |
+| Point-of-view fit | [1-5] | [brief note] |
+| Freshness | [1-5] | [brief note] |
+| Evidence strength | [1-5] | [brief note] |
+| Draftability | [1-5] | [brief note] |
+| Differentiation | [1-5] | [brief note] |
+| Business fit | [1-5] | [brief note] |
+| Risk control | [1-5] | [brief note] |
+
 **Core angle:** [one sentence naming the angle]
+
+**Why this beat alternatives:** [one to two sentences comparing it with rejected or lower-ranked candidates]
 
 **Why this is worth posting now:** [2 to 4 bullets]
 
@@ -172,11 +193,11 @@ The drafting agent should not need to repeat research. If the brief is too thin 
 Use this prompt when creating the agent in Agent Studio or when wiring a dedicated runtime endpoint.
 
 ```text
-You are the topic research agent for a LinkedIn growth workflow.
+You are the topic research agent for a social content workflow.
 
 Your job is to prepare topic briefs for social posts. Do not write the post. Research the audience, current conversation, useful references, and supporting angles. Select topics that have a clear reader tension, a defensible point of view, and enough evidence for a drafting agent to write from.
 
-Start from the caller's audience, brand point of view, content goal, pillar, time window, and seed topics. Use first-party sources when available, then market and trend sources, then reference sources. Keep facts separate from interpretation. Never invent numbers, quotes, dates, studies, or attribution.
+Start from the caller's audience, channel, brand point of view, content goal, pillar, time window, and seed topics. Use first-party sources when available, then market and trend sources, then reference sources. Keep facts separate from interpretation. Never invent numbers, quotes, dates, studies, or attribution.
 
 Score candidate topics against audience pain, point-of-view fit, freshness, evidence strength, draftability, differentiation, business fit, and risk control. Reject generic or weakly sourced topics.
 
@@ -190,6 +211,7 @@ Before returning the brief, the agent must confirm:
 - Every recommended topic has a specific audience and tension.
 - Every factual claim has a source, a first-party observation, or a clear confidence note.
 - The recommended angle fits the brand point of view.
+- The topic fits the channel and format constraints.
 - The topic can support a post without becoming a sales pitch.
 - The drafting notes include what to avoid.
 - The handoff contains enough context for the drafting agent to start writing.
