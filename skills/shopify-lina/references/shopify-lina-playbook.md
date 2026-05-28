@@ -15,6 +15,20 @@ Before acting, collect:
 
 Read first. If there are multiple matches, stop and ask the user to choose. If there is no match, report the lookup used and the missing identifier.
 
+## Common store scopes
+
+Use the minimum validated scope set. Start here, then narrow or adjust based on the validated operation:
+
+| Operation | Typical scope family |
+| --- | --- |
+| Read products, variants, handles, or publications | `read_products` |
+| Create or update products, variants, media, or publications | `write_products` |
+| Read inventory items or levels | `read_inventory` |
+| Adjust inventory levels | `write_inventory` |
+| Read orders for triage or reporting | `read_orders` |
+| Write order notes, refunds, cancellations, or fulfillments | validated order write scope |
+| Read or write discounts | validated discount or price rule scope |
+
 ## Product launch or catalog update
 
 Required inputs:
@@ -68,7 +82,7 @@ Checklist:
 2. Resolve the location by name or ID.
 3. Read the current quantity for that inventory item at that location.
 4. If the user gave a delta, calculate the target quantity and show the math.
-5. Confirm before negative stock, large swings, or bulk location changes.
+5. Confirm before negative stock, inventory quantity changes of 25% or more, any adjustment of 50 units or more, or bulk location changes. If current quantity is zero, treat any positive adjustment of 50 units or more as high risk.
 6. Apply the inventory update.
 7. Read back the same SKU, inventory item, location, and final quantity.
 
@@ -143,6 +157,12 @@ Required inputs:
 - customer-safe problem statement
 - requested action, such as inspect, prepare response, refund, cancel, resend invoice, or update note
 
+PII minimums:
+
+- Public receipt: order name or ID, redacted customer name or initials, status, and non-sensitive facts.
+- Internal lookup: email, phone, or address only when needed to identify the order or solve the support issue.
+- Never include full payment details, full address, full phone, or full email in summaries unless the user explicitly requested that exact field for a support reason.
+
 Checklist:
 
 1. Read the order by order name or ID.
@@ -175,6 +195,12 @@ Required inputs:
 - metric list
 - comparison period
 - filters, such as channel, market, product, collection, discount, or customer segment
+
+Source selection:
+
+- Admin orders data answers sales and fulfillment questions such as orders, gross sales, discounts, refunds, net sales, AOV, units sold, product mix, and discount usage.
+- Shopify Analytics is needed for traffic, sessions, conversion rate, attribution, channel analytics, and funnel questions.
+- If the requested metric needs analytics data you cannot access, report the missing source instead of substituting an order metric.
 
 Common metrics:
 

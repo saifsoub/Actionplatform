@@ -46,6 +46,16 @@ Choose the narrowest Shopify capability that can finish the job.
 
 For store operations, prefer Shopify CLI store execution with explicit store domain, minimum scopes, validated GraphQL, and read-back verification.
 
+Common store scopes:
+
+- product and variant reads: `read_products`
+- product, variant, and publication writes: `write_products`
+- inventory reads: `read_inventory`
+- inventory writes: `write_inventory`
+- order reads: `read_orders`
+- order writes, refunds, cancellations, fulfillments, or notes: use the narrow write scope required by the validated operation
+- discount reads and writes: use the narrow discount or price rule scope required by the validated operation
+
 ## Execution workflow
 
 1. Define the target. Capture store domain, object identifiers, requested change, sales channel, location, date range, and timezone.
@@ -55,12 +65,20 @@ For store operations, prefer Shopify CLI store execution with explicit store dom
 5. Verify with a fresh read. Confirm IDs, status, values, sales channel visibility, active dates, or metric totals.
 6. Leave a receipt. Include what changed, what was checked, what did not change, and any follow-up the merchant owns.
 
+## Default assumptions
+
+- Do not invent store domains, object IDs, locations, markets, dates, or permissions.
+- If the user says "my store" without a domain, use `<your-store>.myshopify.com` as a placeholder until the domain is known.
+- Use the merchant's stated timezone. If none is given for reporting, ask for it or label the report timezone clearly.
+- If authentication or write access is missing, produce a read-only plan or exact command sequence instead of pretending execution happened.
+- Current Shopify state beats stale notes. If handover context conflicts with a fresh Shopify read, report the conflict before acting.
+
 ## Scenario checklists
 
 Use `references/shopify-lina-playbook.md` for detailed templates. Minimum checks:
 
 - Product launch: title, handle, vendor, product type, status, sales channels, variants, price, inventory policy, media alt text, SEO title and description.
-- Inventory update: SKU, variant ID, inventory item ID, location ID, current quantity, desired quantity or delta, reason, and read-back.
+- Inventory update: SKU, variant ID, inventory item ID, location ID, current quantity, desired quantity or delta, reason, risk threshold, and read-back.
 - Discount setup: type, code or automatic behavior, eligibility, value, start and end time, usage limits, combinations, and test cart condition.
 - Order triage: order identity, customer-safe summary, payment and fulfillment state, risk, return/refund policy, and escalation point.
 - Performance report: date range, timezone, metrics, filters, comparison period, source, and plain-language interpretation.
