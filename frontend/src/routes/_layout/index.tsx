@@ -192,9 +192,18 @@ function Dashboard() {
       </div>
 
       {/* ── Quick actions ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "28px" }}>
-        <Link to="/council">
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", marginBottom: "28px" }}>
+        <Link to="/social-planner">
           <div style={quickActionStyle("#00D4FF")}>
+            <span style={{ fontSize: "22px" }}>📅</span>
+            <div>
+              <div style={{ color: "white", fontWeight: "700", fontSize: "14px" }}>Plan LinkedIn</div>
+              <div style={{ color: "#888", fontSize: "12px" }}>Intake to weekly slate</div>
+            </div>
+          </div>
+        </Link>
+        <Link to="/council">
+          <div style={quickActionStyle("#5DDCFF")}>
             <span style={{ fontSize: "22px" }}>⚖️</span>
             <div>
               <div style={{ color: "white", fontWeight: "700", fontSize: "14px" }}>Ask the Council</div>
