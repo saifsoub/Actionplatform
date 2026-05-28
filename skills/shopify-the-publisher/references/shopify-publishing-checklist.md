@@ -6,7 +6,7 @@ Use this checklist before changing Shopify publication state. Keep the completed
 
 - Confirm the authenticated store and target environment.
 - Confirm the resource type and direction.
-- Confirm the target sales channel, publication, theme role, or Online Store target.
+- Confirm the target sales channel, publication, or Online Store target.
 - Confirm the source of truth and save it unchanged.
 - Confirm whether draft, archived, hidden, embargoed, out-of-stock, or incomplete resources are in scope.
 - Confirm the merchant-owned signal for hidden-by-design resources, such as a CSV column, tag, metafield, collection, or written list.
@@ -17,6 +17,7 @@ Use this checklist before changing Shopify publication state. Keep the completed
 - Flag missing IDs, duplicate handles, changed handles, and resources not found in Shopify.
 - Flag duplicate SKUs only when SKU is used to resolve the product or when the duplicates map to multiple possible parent products.
 - Flag resources that are currently hidden and would become visible.
+- Flag resources that are currently live and would become hidden.
 - Flag resources already in the requested state.
 - Flag resources that are published on other channels but not on the requested target.
 
@@ -26,7 +27,7 @@ Create a manifest with these columns:
 
 | Column | Purpose |
 | --- | --- |
-| resource_type | Product, collection, page, blog, article, theme, or other publishable type |
+| resource_type | Product, collection, page, blog, article, or other visibility-controlled type |
 | resource_id | Stable Shopify ID when available |
 | handle | Human-readable identifier |
 | title | Resource title |
@@ -53,13 +54,14 @@ Before execution, report:
 - Total candidates.
 - Count by category.
 - Count currently hidden that would become visible.
+- Count currently live resources that would become hidden.
 - Count draft or archived resources in scope.
 - Count draft products that would also need status activation.
 - Count ambiguous or not found resources.
 - Exact target channel or publication.
 - Planned batch size and stop conditions.
 
-Approval must reference the manifest, exact rows, or exact counts. If the approval is vague, continue planning but do not execute.
+Approval must reference the manifest, exact rows, or exact counts. For unpublish work, approval must include the count of live resources that will become hidden. If the approval is vague, continue planning but do not execute.
 
 ## Execution
 
