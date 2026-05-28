@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
+from typing import Optional
 
 from pydantic import EmailStr
 from sqlalchemy import DateTime
@@ -57,9 +58,9 @@ class User(UserBase, table=True):
     items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
     agents: list["Agent"] = Relationship(back_populates="owner", cascade_delete=True)
     skills: list["Skill"] = Relationship(back_populates="owner", cascade_delete=True)
-    subscription: "Subscription | None" = Relationship(back_populates="user")
+    subscription: Optional["Subscription"] = Relationship(back_populates="user")
     council_sessions: list["CouncilSession"] = Relationship(back_populates="owner", cascade_delete=True)
-    profile: "UserProfile | None" = Relationship(back_populates="user")
+    profile: Optional["UserProfile"] = Relationship(back_populates="user")
 
 
 # Properties to return via API, id is always required
@@ -172,7 +173,7 @@ class Agent(AgentBase, table=True):
     owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE", index=True
     )
-    owner: "User | None" = Relationship(back_populates="agents")
+    owner: Optional["User"] = Relationship(back_populates="agents")
     skills: list["AgentSkillLink"] = Relationship(back_populates="agent", cascade_delete=True)
 
 
@@ -216,7 +217,7 @@ class Skill(SkillBase, table=True):
     owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE", index=True
     )
-    owner: "User | None" = Relationship(back_populates="skills")
+    owner: Optional["User"] = Relationship(back_populates="skills")
     agent_links: list["AgentSkillLink"] = Relationship(back_populates="skill", cascade_delete=True)
 
 
@@ -281,7 +282,7 @@ class Subscription(SubscriptionBase, table=True):
     user_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE", unique=True
     )
-    user: "User | None" = Relationship(back_populates="subscription")
+    user: Optional["User"] = Relationship(back_populates="subscription")
 
 
 class SubscriptionPublic(SubscriptionBase):
@@ -328,7 +329,7 @@ class CouncilSession(CouncilSessionBase, table=True):
     owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE", index=True
     )
-    owner: "User | None" = Relationship(back_populates="council_sessions")
+    owner: Optional["User"] = Relationship(back_populates="council_sessions")
 
 
 class CouncilSessionPublic(CouncilSessionBase):
@@ -370,7 +371,7 @@ class UserProfile(UserProfileBase, table=True):
     user_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE", unique=True
     )
-    user: "User | None" = Relationship(back_populates="profile")
+    user: Optional["User"] = Relationship(back_populates="profile")
 
 
 class UserProfilePublic(UserProfileBase):
