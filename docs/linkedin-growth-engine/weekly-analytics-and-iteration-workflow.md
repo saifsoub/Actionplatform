@@ -4,7 +4,7 @@ Use this workflow to review LinkedIn post performance, extract lessons, and turn
 
 ## Operating rhythm
 
-Run the review once per week after the most recent posts have had at least 72 hours to gather signal.
+Run the review once per week. Posts with at least 72 hours of runtime are eligible for decisions. Newer posts stay in `Watch` and come back into the next review.
 
 1. **Collect metrics before the review.** Export or record performance for every post published during the review window.
 2. **Score the week.** Compare each post with the rolling 4-week median, then add qualitative notes from comments, DMs, and profile visits.
@@ -45,7 +45,7 @@ Timebox the review to 45 minutes.
 
 - List the posts reviewed this week.
 - Note the rolling 4-week median for impressions and engagement rate.
-- Flag posts that have not had 72 hours of runtime. Review them lightly and revisit next week.
+- Flag posts that have not had 72 hours of runtime as `Watch`. Capture early qualitative notes, but do not make keep, change, or stop decisions yet.
 
 ### 2. Identify winners and misses, 10 minutes
 
@@ -55,7 +55,7 @@ For each post, assign one status.
 | --- | --- |
 | Double down | At least 1.5x the 4-week median on reach or engagement, with useful comments or profile/follow signal. |
 | Iterate | Near baseline but with one promising element, such as a strong hook, thread of comments, or useful objection. |
-| Retire | Below 0.6x baseline twice, with weak qualitative signal. |
+| Retire | The same topic, format, audience, CTA, or hypothesis has landed below 0.6x baseline twice, with weak qualitative signal both times. |
 | Watch | Too early to judge or distorted by unusual distribution. |
 
 ### 3. Extract lessons, 15 minutes

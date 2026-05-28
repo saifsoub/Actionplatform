@@ -13,13 +13,29 @@
 - Rolling 4-week median engagement rate:
 - Notes about holidays, launches, outages, or unusual distribution:
 
-## Post scorecard
+## Post inventory
 
-| Post | URL | Format | Topic | Impressions | Engagement rate | Qualitative signal | Status | Next action |
+| Post | URL | Published | Format | Topic | Target audience | Hook | CTA | Distribution notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |  | Double down / Iterate / Retire / Watch |  |
+|  |  |  |  |  |  |  |  |  |
+
+## Metrics scorecard
+
+| Post | Impressions | Reactions | Comments | Reposts | Saves | Profile visits | Follows | Link clicks | CTR | Engagement rate | Qualitative signal | Status | Next action |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  |  |  |  |  |  | Double down / Iterate / Retire / Watch |  |
 
 ## Top lessons
+
+### Lesson dimensions
+
+- Hook:
+- Audience:
+- Promise:
+- Proof:
+- Format:
+- CTA:
+- Distribution:
 
 ### Keep
 
