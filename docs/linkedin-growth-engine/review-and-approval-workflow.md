@@ -81,11 +81,12 @@ The post can denormalize `approved_revision_number` for quick reads, but the app
 ## Edit and transition rules
 
 - A post can be edited in `draft` or `changes_requested`.
+- Editing a post in `changes_requested` moves it back to `draft` and creates a new revision.
 - A post in `in_review` must be withdrawn to `draft` before the author can edit it.
-- Editing an `approved` or `scheduled` post creates a new revision and moves the post back to `draft`.
+- Editing an `approved` or `scheduled` post creates a new revision and moves the post back to `draft`. It must clear `approved_revision_number`, `scheduled_for`, and `scheduled_revision_number`, then record an `approval_invalidated` activity.
 - A post can move to `approved` only when there is no open feedback on the current revision.
 - A post can move to `scheduled` only if the scheduled revision matches the approved revision.
-- A post can move to `published` only from `scheduled` or `approved`.
+- A post can move to `published` only from `scheduled` or `approved`. Publishing writes `published_revision_number` and rejects stale or mismatched revisions.
 - A published post cannot be edited in place. Corrections should create a follow-up draft or an internal note.
 - Archiving is allowed from any state. For `published` posts, archive should hide the record from active queues without deleting the published history.
 - Unarchiving moves an archived post back to `draft` so the team can decide the next action deliberately.
@@ -97,9 +98,9 @@ The post can denormalize `approved_revision_number` for quick reads, but the app
 Start with simple role checks, then refine for team policy.
 
 - Authors can create, edit, submit, withdraw, archive, and resolve feedback on their own posts.
-- Assigned reviewers can add feedback and request changes.
+- Assigned reviewers can add feedback, request changes, and resolve feedback.
 - Assigned approvers can approve the current revision.
-- Publishers can schedule, unschedule, mark published, and archive from active queues.
+- Assigned publishers can schedule, unschedule, mark published, and archive from active queues.
 - Superusers can perform any workflow action for support and recovery.
 - Single-user accounts may let the same user review and approve their own work, but the action records must still use the specific workflow action.
 
@@ -216,8 +217,10 @@ Keep the API explicit. Status changes should be actions, not loose partial updat
 - `POST /posts` creates a draft.
 - `GET /posts` lists posts with filters for status and assignment.
 - `GET /posts/{post_id}` returns the post, feedback, approvals, and recent activity.
+- `GET /posts/{post_id}/revisions` returns revision history for audit and comparison views.
 - `PATCH /posts/{post_id}` edits the draft body or title and creates a new revision. The request should include the last seen `revision_number` or `updated_at` value.
-- `POST /posts/{post_id}/submit-review` moves a draft or changes-requested post to review.
+- `PATCH /posts/{post_id}/assignments` updates `assigned_reviewer_id`, `assigned_approver_id`, and `assigned_publisher_id`.
+- `POST /posts/{post_id}/submit-review` moves a draft or changes-requested post to review. The current revision must have non-empty content and no open feedback.
 - `POST /posts/{post_id}/withdraw-review` moves a post from review back to draft.
 - `POST /posts/{post_id}/feedback` adds feedback to the current revision.
 - `POST /posts/{post_id}/feedback/{feedback_id}/resolve` resolves feedback.
@@ -225,7 +228,7 @@ Keep the API explicit. Status changes should be actions, not loose partial updat
 - `POST /posts/{post_id}/approve` approves the current revision.
 - `POST /posts/{post_id}/schedule` schedules an approved revision. The request body should include `scheduled_for` and `revision_number`.
 - `POST /posts/{post_id}/unschedule` moves a scheduled post back to approved.
-- `POST /posts/{post_id}/publish` marks an approved or scheduled post as published.
+- `POST /posts/{post_id}/publish` marks an approved or scheduled post as published. The request body should include `revision_number`, which must match `scheduled_revision_number` for scheduled posts or `approved_revision_number` for approved posts.
 - `POST /posts/{post_id}/archive` archives inactive work.
 - `POST /posts/{post_id}/unarchive` restores archived work to draft.
 
