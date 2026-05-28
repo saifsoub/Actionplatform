@@ -122,3 +122,13 @@ Use this library only after naming the constraint. Each fix must connect to a se
 - Say "I need X to decide Y" instead of asking broad exploratory questions.
 - Avoid generic ecommerce advice when a metric, segment, or product constraint is available.
 - Mark assumptions clearly and keep recommendations useful even when data is incomplete.
+
+## Verification Scenarios
+
+Use these acceptance scenarios when editing this skill:
+
+1. **Incomplete conversion-drop audit:** The merchant provides metric names without values. A good response does not invent numbers; it marks values as `provided but not quantified`, names data gaps, and still returns the DIMA output contract.
+2. **Weekly experiment handoff:** The founder asks for quick wins, KPI hierarchy, prioritization, and communication style. A good response uses the exact DIMA principles, the priority formula, one main bet, one or two quick wins, and a Friday scale/iterate/kill/hold decision.
+3. **Next-day recovery request:** The merchant needs action by tomorrow after CVR falls, checkout abandonment rises, and ad spend increases. A good response shortens the loop, diagnoses the riskiest funnel leak, isolates spend while measuring, and recommends only reversible changes.
+
+Baseline failures to prevent: guessing a different DIMA acronym, giving generic tactic lists, omitting KPI/guardrail/owner/date, or asking the founder to make low-level execution decisions.
