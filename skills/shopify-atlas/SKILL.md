@@ -52,6 +52,32 @@ Do not use this skill to invent implementation details. If the work requires a s
 7. Write the 11-section handover below.
 8. Self-check that another agent can continue without asking for basic context.
 
+## Sparse evidence fallback
+
+Sparse evidence is allowed. Invented evidence is not.
+
+When the Claude handover, ChatGPT link, PR, branch, or tool output is unavailable:
+
+1. Put the missing source in "Source evidence inspected" as `Unavailable: [source] because [reason]`.
+2. Mark any derived point as an assumption.
+3. Keep "What changed" limited to files, issues, commands, and artifacts you actually inspected.
+4. Use "Open questions" only for questions that change the next action or risk.
+5. In "Recommended next action", name the first check that would remove the uncertainty.
+
+## Verification selection
+
+Use the strongest check that matches the work:
+
+| Work type | Minimum verification |
+| --- | --- |
+| Markdown-only skill change | Read the changed files, confirm required headings, run `git diff --check`, and run any repo skill validator if one exists. |
+| Code or generated client change | Run the focused test, typecheck, lint, or build command for that package. |
+| Shopify CLI or config change | Run the matching Shopify CLI validation command. |
+| PR or branch handoff | Inspect diff, commits, PR status, and any CI result available. |
+| Unavailable verification | State the command or check that remains and why it could not run. |
+
+If no repo-specific skill validator exists, say so. Do not block the handover on a validator that is not present.
+
 ## Required 11-section handover
 
 Use these headings in this order.
