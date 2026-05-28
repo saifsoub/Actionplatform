@@ -93,18 +93,31 @@ def test_update_profile_accepts_partial_payload(
     db: Session,
 ) -> None:
     headers = _auth_headers_for_new_user(client, db)
+    initial_payload = {
+        "role": "Founder / CEO",
+        "domain": "SaaS / Tech",
+        "onboarding_complete": True,
+    }
+    client.put(
+        f"{settings.API_V1_STR}/profile/",
+        headers=headers,
+        json=initial_payload,
+    )
 
     response = client.put(
         f"{settings.API_V1_STR}/profile/",
         headers=headers,
         json={"role": "Engineer"},
     )
+    get_response = client.get(f"{settings.API_V1_STR}/profile/", headers=headers)
 
     assert response.status_code == 200
+    assert get_response.status_code == 200
     content = response.json()
+    assert content == get_response.json()
     assert content["role"] == "Engineer"
-    assert content["domain"] is None
-    assert content["onboarding_complete"] is False
+    assert content["domain"] == initial_payload["domain"]
+    assert content["onboarding_complete"] is True
 
 
 def test_get_profile_requires_authentication(client: TestClient) -> None:
