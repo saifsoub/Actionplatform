@@ -3,7 +3,9 @@ import { describe, test } from "node:test"
 
 import {
   buildWeeklySlate,
+  countWeeklySelection,
   type ContentIdea,
+  parseStoredIdeas,
   rankIdeasForPlanning,
   scoreIdea,
 } from "../src/components/socialPlannerWorkflow"
@@ -39,7 +41,7 @@ describe("social planner workflow", () => {
     assert.deepEqual(ranked.map((item) => item.id), ["low-effort", "high-effort", "intake"])
   })
 
-  test("builds a five-day slate from selected ideas only", () => {
+  test("builds a five-day slate from selected and drafting ideas", () => {
     const slate = buildWeeklySlate([
       idea({ id: "one", title: "One", status: "selected", audienceFit: 5, proofStrength: 5, effort: 1 }),
       idea({ id: "two", title: "Two", status: "selected", audienceFit: 4, proofStrength: 4, effort: 2 }),
@@ -51,7 +53,29 @@ describe("social planner workflow", () => {
       [
         { day: "Monday", ideaId: "one", title: "One" },
         { day: "Tuesday", ideaId: "two", title: "Two" },
+        { day: "Wednesday", ideaId: "draft", title: "Draft" },
       ],
     )
+  })
+
+  test("counts drafting ideas against weekly selection capacity", () => {
+    assert.equal(
+      countWeeklySelection([
+        idea({ id: "selected", status: "selected" }),
+        idea({ id: "draft", status: "drafting" }),
+        idea({ id: "backlog", status: "prioritized" }),
+      ]),
+      2,
+    )
+  })
+
+  test("falls back when stored planner data is malformed", () => {
+    const fallback = [idea({ id: "fallback", title: "Fallback" })]
+    const invalidStatus = JSON.stringify([idea({ id: "bad-status" }), { ...idea({ id: "bad" }), status: "weird" }])
+    const invalidScore = JSON.stringify([{ ...idea({ id: "bad-score" }), audienceFit: 9 }])
+
+    assert.deepEqual(parseStoredIdeas("not json", fallback), fallback)
+    assert.deepEqual(parseStoredIdeas(invalidStatus, fallback), fallback)
+    assert.deepEqual(parseStoredIdeas(invalidScore, fallback), fallback)
   })
 })

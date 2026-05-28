@@ -1,11 +1,14 @@
 import { type CSSProperties, type FormEvent, useEffect, useMemo, useState } from "react"
 
+import useAuth from "@/hooks/useAuth"
 import {
   buildWeeklySlate,
+  countWeeklySelection,
   type ContentFormat,
   type ContentIdea,
   type ContentTheme,
   type IdeaStatus,
+  parseStoredIdeas,
   rankIdeasForPlanning,
   scoreIdea,
 } from "./socialPlannerWorkflow"
@@ -115,44 +118,17 @@ function createId(): string {
   return `idea-${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
-function isContentIdea(value: unknown): value is ContentIdea {
-  if (!value || typeof value !== "object") return false
-  const candidate = value as Partial<Record<keyof ContentIdea, unknown>>
-  return (
-    typeof candidate.id === "string" &&
-    typeof candidate.title === "string" &&
-    typeof candidate.angle === "string" &&
-    typeof candidate.source === "string" &&
-    typeof candidate.theme === "string" &&
-    typeof candidate.format === "string" &&
-    typeof candidate.audienceFit === "number" &&
-    typeof candidate.proofStrength === "number" &&
-    typeof candidate.effort === "number" &&
-    typeof candidate.status === "string" &&
-    typeof candidate.createdAt === "string"
-  )
-}
-
-function loadIdeas(): ContentIdea[] {
-  const stored = localStorage.getItem(STORAGE_KEY)
-  if (!stored) return SEED_IDEAS
-
-  try {
-    const parsed: unknown = JSON.parse(stored)
-    return Array.isArray(parsed) && parsed.every(isContentIdea) ? parsed : SEED_IDEAS
-  } catch {
-    return SEED_IDEAS
-  }
-}
-
 function labelFor<T extends string>(options: { value: T; label: string }[], value: T): string {
   return options.find((option) => option.value === value)?.label ?? value
 }
 
 export default function SocialPlanner() {
-  const [ideas, setIdeas] = useState<ContentIdea[]>(loadIdeas)
+  const { user: currentUser } = useAuth()
+  const storageKey = currentUser?.id ? `${STORAGE_KEY}:${currentUser.id}` : null
+  const [ideas, setIdeas] = useState<ContentIdea[]>([])
   const [draft, setDraft] = useState<DraftIdea>(EMPTY_DRAFT)
-  const selectedCount = ideas.filter((idea) => idea.status === "selected").length
+  const [hydratedStorageKey, setHydratedStorageKey] = useState<string | null>(null)
+  const activeWeeklyCount = countWeeklySelection(ideas)
   const rankedIdeas = useMemo(
     () => rankIdeasForPlanning(ideas).filter((idea) => !["published", "archived"].includes(idea.status)),
     [ideas],
@@ -160,8 +136,15 @@ export default function SocialPlanner() {
   const weeklySlate = useMemo(() => buildWeeklySlate(ideas), [ideas])
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ideas))
-  }, [ideas])
+    if (!storageKey) return
+    setIdeas(parseStoredIdeas(localStorage.getItem(storageKey), SEED_IDEAS))
+    setHydratedStorageKey(storageKey)
+  }, [storageKey])
+
+  useEffect(() => {
+    if (!storageKey || hydratedStorageKey !== storageKey) return
+    localStorage.setItem(storageKey, JSON.stringify(ideas))
+  }, [hydratedStorageKey, ideas, storageKey])
 
   function updateStatus(id: string, status: IdeaStatus) {
     setIdeas((current) => current.map((idea) => (idea.id === id ? { ...idea, status } : idea)))
@@ -201,7 +184,7 @@ export default function SocialPlanner() {
   const metrics = [
     { label: "Ideas in intake", value: ideas.filter((idea) => idea.status === "intake").length },
     { label: "Ranked backlog", value: ideas.filter((idea) => idea.status === "prioritized").length },
-    { label: "Selected this week", value: selectedCount },
+    { label: "Active this week", value: activeWeeklyCount },
     { label: "Published", value: ideas.filter((idea) => idea.status === "published").length },
   ]
 
@@ -341,7 +324,7 @@ export default function SocialPlanner() {
             <h2 style={S.sectionTitle}>Prioritized idea queue</h2>
             <p style={S.muted}>Selected and prioritized ideas rise to the top. Intake stays visible below them.</p>
           </div>
-          <div style={S.capacity}>{selectedCount}/{MAX_WEEKLY_SELECTION} selected</div>
+          <div style={S.capacity}>{activeWeeklyCount}/{MAX_WEEKLY_SELECTION} active</div>
         </div>
         <div style={S.ideaList}>
           {rankedIdeas.map((idea) => (
@@ -364,9 +347,9 @@ export default function SocialPlanner() {
                 {idea.status !== "selected" && idea.status !== "drafting" && (
                   <button
                     type="button"
-                    disabled={selectedCount >= MAX_WEEKLY_SELECTION}
+                    disabled={activeWeeklyCount >= MAX_WEEKLY_SELECTION}
                     onClick={() => updateStatus(idea.id, "selected")}
-                    style={selectedCount >= MAX_WEEKLY_SELECTION ? S.disabledButton : S.smallButton}
+                    style={activeWeeklyCount >= MAX_WEEKLY_SELECTION ? S.disabledButton : S.smallButton}
                   >
                     Select for week
                   </button>
