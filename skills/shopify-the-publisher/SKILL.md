@@ -44,6 +44,7 @@ If any input is missing, produce a dry-run plan and ask for the missing decision
    - Confirm store, resource type, target channel, direction, and source of truth.
    - State what will not be touched.
    - Prefer stable Shopify IDs. Use handles when IDs are unavailable. Treat SKUs as variant identifiers unless the task proves otherwise.
+   - Do not block a product-level publish only because variant SKUs repeat if product IDs or handles still resolve each parent product unambiguously.
 
 2. Snapshot current state.
    - Export or query current publish state for every candidate.
@@ -107,7 +108,7 @@ This path is the fastest safe option. It does not turn skipped rows into approve
 | Bulk publish request | Build dry-run manifest first |
 | Hidden products included | Require explicit approval for those exact products |
 | CSV has variant rows | Collapse to parent products before publishing |
-| Handles or SKUs are duplicated | Mark ambiguous and skip |
+| Duplicate identifiers | Skip only rows whose product cannot be resolved unambiguously |
 | Draft products included | Separate status activation approval from publication approval |
 | Product live elsewhere | Report other-channel state without changing it |
 | API returns permission or publication errors | Stop the batch and diagnose |

@@ -14,7 +14,8 @@ Use this checklist before changing Shopify publication state. Keep the completed
 - Record a before-state snapshot with resource ID, handle, title, status, target state, and timestamp.
 - Normalize the source list to one publishable resource per row.
 - Collapse product variant rows to parent products.
-- Flag missing IDs, duplicate handles, duplicate SKUs, changed handles, and resources not found in Shopify.
+- Flag missing IDs, duplicate handles, changed handles, and resources not found in Shopify.
+- Flag duplicate SKUs only when SKU is used to resolve the product or when the duplicates map to multiple possible parent products.
 - Flag resources that are currently hidden and would become visible.
 - Flag resources already in the requested state.
 - Flag resources that are published on other channels but not on the requested target.

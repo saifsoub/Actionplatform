@@ -8,7 +8,7 @@ Use this matrix during execution and verification. When in doubt, stop before ch
 | Wrong target | Online Store expected but another publication appears, target channel missing | Stop and confirm target publication | Retry only after target is corrected |
 | Permission denied | Missing scopes, publication permission errors, protected theme action | Stop the batch and report missing access | Do not retry until permissions change |
 | Invalid resource | Product, collection, page, or article ID not found | Mark row `not_found` and continue if isolated | Retry only after source of truth is corrected |
-| Ambiguous match | Duplicate handles, duplicate SKUs, handle changed, multiple matches | Mark row `ambiguous` and skip | Do not retry without a stable ID |
+| Ambiguous match | Duplicate handles, SKU used as product lookup with multiple parent matches, handle changed, multiple matches | Mark row `ambiguous` and skip | Do not retry without a stable ID |
 | State drift | Resource changed since dry run, status changed to draft or archived | Stop high-risk batches, refresh manifest | Retry only with a new dry run |
 | Validation error | Draft resource cannot publish, required field missing, invalid publication input | Mark row `blocked` | Retry after data is fixed and approved |
 | Missing hidden signal | Source data does not prove whether hidden products are accidental or intentional | Mark affected rows `blocked` | Retry only after the merchant provides a clear signal |
