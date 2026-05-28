@@ -130,4 +130,4 @@ Decision rules:
 
 ## Reference
 
-For the detailed Claude handover structure, use `references/claude-handover-framework.md`.
+For complex diagnoses, sprint plans, weekly reviews, or handoffs, use `references/claude-handover-framework.md`.
