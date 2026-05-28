@@ -1,4 +1,15 @@
-import { Briefcase, Home, Scale, Users, Bot, Gem, Bitcoin, BookOpen, History } from "lucide-react"
+import {
+  Bitcoin,
+  BookOpen,
+  Bot,
+  Briefcase,
+  Gem,
+  History,
+  Home,
+  MessageCircle,
+  Scale,
+  Users,
+} from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
@@ -18,6 +29,7 @@ const baseItems: Item[] = [
   { icon: Scale, title: "The Council", path: "/council" },
   { icon: Bitcoin, title: "Cipher", path: "/cipher" },
   { icon: Bot, title: "Agent Studio", path: "/agents" },
+  { icon: MessageCircle, title: "Engagement Monitor", path: "/engagement" },
   { icon: Briefcase, title: "Items", path: "/items" },
   { icon: History, title: "Decision Journal", path: "/history" },
   { icon: Gem, title: "Pricing", path: "/pricing" },
