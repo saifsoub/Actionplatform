@@ -1,0 +1,90 @@
+# Shopify publishing checklist
+
+Use this checklist before changing Shopify publication state. Keep the completed checklist with the execution notes when the work has launch or rollback risk.
+
+## Preflight
+
+- Confirm the authenticated store and target environment.
+- Confirm the resource type and direction.
+- Confirm the target sales channel, publication, or Online Store target.
+- Confirm the source of truth and save it unchanged.
+- Confirm whether draft, archived, hidden, embargoed, out-of-stock, or incomplete resources are in scope.
+- Confirm the merchant-owned signal for hidden-by-design resources, such as a CSV column, tag, metafield, collection, or written list.
+- Fetch current Shopify state for every candidate.
+- Record a before-state snapshot with resource ID, handle, title, status, target state, and timestamp.
+- Normalize the source list to one publishable resource per row.
+- Collapse product variant rows to parent products.
+- Flag missing IDs, duplicate handles, changed handles, and resources not found in Shopify.
+- Flag duplicate SKUs only when SKU is used to resolve the product or when the duplicates map to multiple possible parent products.
+- Flag resources that are currently hidden and would become visible.
+- Flag resources that are currently live and would become hidden.
+- Flag resources already in the requested state.
+- Flag resources that are published on other channels but not on the requested target.
+
+## Dry-run manifest
+
+Create a manifest with these columns:
+
+| Column | Purpose |
+| --- | --- |
+| resource_type | Product, collection, page, blog, article, or other visibility-controlled type |
+| resource_id | Stable Shopify ID when available |
+| handle | Human-readable identifier |
+| title | Resource title |
+| current_status | Active, draft, archived, or equivalent |
+| current_target_state | Current publish state for the target |
+| requested_target_state | Desired publish state |
+| action | Publish, unpublish, skip, verify, or rollback |
+| reason | Why this action is safe or why it is skipped |
+| risk | Low, medium, or high |
+
+Use these categories:
+
+- `would_change`
+- `already_correct`
+- `excluded`
+- `ambiguous`
+- `not_found`
+- `blocked`
+
+## Approval gate
+
+Before execution, report:
+
+- Total candidates.
+- Count by category.
+- Count currently hidden that would become visible.
+- Count currently live resources that would become hidden.
+- Count draft or archived resources in scope.
+- Count draft products that would also need status activation.
+- Count ambiguous or not found resources.
+- Exact target channel or publication.
+- Planned batch size and stop conditions.
+
+Approval must reference the manifest, exact rows, or exact counts. For unpublish work, approval must include the count of live resources that will become hidden. If the approval is vague, continue planning but do not execute.
+
+## Execution
+
+- Re-check the store identity immediately before changing data.
+- Execute only rows approved for change.
+- Use current Shopify Admin API or Shopify CLI guidance for the exact operation.
+- Start with 25 resources for high-risk launches or 50 for routine verified work, then reduce the size if Shopify throttles, a batch partially fails, or verification mismatches appear.
+- Respect Shopify rate limits.
+- Log resource ID, handle, prior state, requested state, result, error, and timestamp for every row.
+- Pause after the first batch and verify before continuing when the change is high risk.
+- Stop if failures suggest wrong store, wrong channel, missing permission, invalid mutation, or source data drift.
+
+## Verification
+
+- Re-query Shopify after execution.
+- Compare verified state with the dry-run manifest.
+- Reconcile requested, changed, already correct, skipped, failed, and unknown counts.
+- Spot-check a few representative resources in the target channel.
+- For product launches, include products with variants, products that were previously hidden, and products with known exclusions.
+- Save or report the final manifest.
+
+## Rollback notes
+
+Rollback uses the before-state snapshot. Do not invent rollback state from memory.
+
+For each reverted resource, log the same fields as execution. Verify rollback from Shopify after the revert and report any resources that could not be restored.
