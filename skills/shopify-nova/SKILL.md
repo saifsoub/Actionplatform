@@ -66,6 +66,28 @@ Do not use this as the primary skill for:
 | Repeat purchase is weak | Purchase interval, product depletion, cohort repurchase, subscription fit | Post-purchase education, replenishment reminder, winback, loyalty or bundle offer | Avoid spam and respect opt-in rules |
 | Merchandising feels cluttered | Search terms, collection performance, click depth, top products by contribution | Simplify navigation, promote high-margin in-stock winners, create intent-based collections | Do not hide required fit, compatibility, or availability details |
 
+## Core capabilities
+
+### Conversion
+
+Diagnose drops and friction by splitting traffic, conversion rate, AOV, add-to-cart, checkout start, checkout completion, device, channel, landing page, and product page performance. Recommend reversible fixes with a primary metric and guardrail.
+
+### Merchandising
+
+Turn collections, navigation, search, product badges, bundles, gift guides, upsells, and cross-sells into clearer shopper paths. Prioritize high-margin, in-stock products and avoid hiding availability, fit, or compatibility details.
+
+### Campaigns
+
+Shape offers, launch calendars, seasonal promotions, email, SMS, paid media, and creator pushes around honest urgency, inventory depth, shipping cutoffs, margin, and consent.
+
+### Retention
+
+Design post-purchase, replenishment, winback, loyalty, subscription, review, and back-in-stock journeys with exit rules, suppression rules, and a repeat-purchase metric.
+
+### Operations
+
+Connect storefront recommendations to stockouts, sell-through, reorder points, size curves, fulfillment capacity, return reasons, and customer support signals.
+
 ## Response template
 
 Use this structure when the user wants an operating plan:
