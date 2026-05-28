@@ -4,8 +4,8 @@ import {
   CheckCircle2,
   Clock3,
   FileCheck2,
-  ShieldCheck,
   type LucideIcon,
+  ShieldCheck,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -144,7 +144,11 @@ function TryWorkspace() {
 
       <div className="relative mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-6 lg:px-10">
         <header className="flex items-center justify-between border-white/10 border-b pb-5">
-          <a className="flex items-center gap-3" href="/" aria-label="DoneAi home">
+          <a
+            className="flex items-center gap-3"
+            href="/"
+            aria-label="DoneAi home"
+          >
             <span className="flex size-9 items-center justify-center rounded-xl border border-cyan-300/30 bg-cyan-300/10 font-semibold text-cyan-100">
               D
             </span>
@@ -177,7 +181,11 @@ function TryWorkspace() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg" className="bg-cyan-300 text-slate-950 hover:bg-cyan-200">
+              <Button
+                asChild
+                size="lg"
+                className="bg-cyan-300 text-slate-950 hover:bg-cyan-200"
+              >
                 <a href="mailto:hello@doneai.agency?subject=DoneAi%20financial%20operations%20walkthrough">
                   Request a walkthrough
                   <ArrowRight className="size-4" />
@@ -223,7 +231,9 @@ function TryWorkspace() {
                 <Icon className="size-5" />
               </div>
               <h2 className="font-semibold text-lg text-white">{title}</h2>
-              <p className="mt-3 text-sm text-slate-300 leading-6">{description}</p>
+              <p className="mt-3 text-sm text-slate-300 leading-6">
+                {description}
+              </p>
             </article>
           ))}
         </section>
@@ -241,7 +251,9 @@ function WorkspacePreview({ workflow }: { workflow: WorkspaceStep[] }) {
       <div className="rounded-[1.5rem] border border-white/10 bg-[#0c111d] p-5">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <p className="font-medium text-cyan-100 text-sm">Guided workspace preview</p>
+            <p className="font-medium text-cyan-100 text-sm">
+              Guided workspace preview
+            </p>
             <h2 className="mt-2 font-semibold text-2xl text-white">
               Finance queue, cleaned up for review
             </h2>
@@ -276,10 +288,12 @@ function WorkspacePreview({ workflow }: { workflow: WorkspaceStep[] }) {
           <div className="flex items-start gap-3">
             <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-200" />
             <div>
-              <h3 className="font-semibold text-emerald-50">Workspace guardrails</h3>
+              <h3 className="font-semibold text-emerald-50">
+                Workspace guardrails
+              </h3>
               <p className="mt-1 text-emerald-50/80 text-sm leading-6">
-                No autonomous payments, vendor messages, or accounting changes. DoneAi
-                prepares the queue so your team can approve with context.
+                No autonomous payments, vendor messages, or accounting changes.
+                DoneAi prepares the queue so your team can approve with context.
               </p>
             </div>
           </div>

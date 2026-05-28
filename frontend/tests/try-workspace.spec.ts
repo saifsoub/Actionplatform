@@ -14,11 +14,15 @@ test("financial operations try workspace presents a credible prospect landing pa
     }),
   ).toBeVisible()
   await expect(
-    page.getByText("Review invoices, reconcile exceptions, and prepare approvals"),
+    page.getByText(
+      "Review invoices, reconcile exceptions, and prepare approvals",
+    ),
   ).toBeVisible()
   await expect(
     page.getByRole("heading", { name: "Guided workspace preview" }),
   ).toBeVisible()
   await expect(page.getByText("Human approval built in")).toBeVisible()
-  await expect(page.getByRole("link", { name: "Request a walkthrough" })).toBeVisible()
+  await expect(
+    page.getByRole("link", { name: "Request a walkthrough" }),
+  ).toBeVisible()
 })
