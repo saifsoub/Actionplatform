@@ -105,6 +105,18 @@ test("trial onboarding stays specific to the financial ops workspace", async ({
   await expect(page.getByRole("button", { name: /^Continue/ })).toBeVisible()
 })
 
+test("generic auth pages do not use trial-specific positioning", async ({
+  page,
+}) => {
+  await page.goto("/signup")
+
+  await expect(page.getByText("DoneAi").first()).toBeVisible()
+  await expect(page.getByText("finance operations teams")).toHaveCount(0)
+  await expect(
+    page.getByText("Continue into the Financial Ops guided workspace."),
+  ).toHaveCount(0)
+})
+
 test("unknown trial workspace slugs do not render an official preview", async ({
   page,
 }) => {

@@ -14,14 +14,14 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           <Logo variant="full" asLink={false} />
           <div className="space-y-3">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              Guided operations workspace
+              Guided workspace
             </p>
             <h2 className="text-3xl font-semibold tracking-tight">
               Review the evidence, approve the next action, and keep control.
             </h2>
             <p className="text-muted-foreground leading-7">
-              DoneAi gives finance operations teams a focused entry point for
-              queues, owner follow-up, and human-approved recommendations.
+              DoneAi gives teams a focused entry point for operating queues,
+              owner follow-up, and human-approved recommendations.
             </p>
           </div>
         </div>
