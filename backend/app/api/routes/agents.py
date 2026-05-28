@@ -3,6 +3,7 @@ import uuid
 from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import col, func, select
 
+from app.agent_templates import list_agent_templates
 from app.api.deps import CurrentUser, SessionDep
 from app.models import (
     Agent,
@@ -56,6 +57,11 @@ def list_public_agents(
         .limit(limit)
     ).all()
     return AgentsPublic(data=list(agents), count=count)
+
+
+@router.get("/templates")
+def list_templates(_current_user: CurrentUser) -> dict[str, list[dict[str, object]]]:
+    return {"data": list_agent_templates()}
 
 
 @router.post("/", response_model=AgentPublic)
