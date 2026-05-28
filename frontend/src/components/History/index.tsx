@@ -24,7 +24,7 @@ const AGENTS = [
   { key: "nova_response", name: "Nova ✨", color: "#C96FFF" },
   { key: "reza_response", name: "Reza ⚡", color: "#FF5A6A" },
   { key: "kai_response", name: "Kai 🛠️", color: "#00FF9C" },
-]
+] as const
 
 function OutcomePicker({ session, onUpdate }: { session: Session; onUpdate: (s: Session) => void }) {
   const [note, setNote] = useState(session.outcome_note || "")
@@ -230,7 +230,7 @@ export default function History() {
                   {/* Agent responses */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "16px" }}>
                     {AGENTS.map((agent) => {
-                      const text = (s as Record<string, string>)[agent.key]
+                      const text = s[agent.key]
                       if (!text) return null
                       return (
                         <div key={agent.key} style={{
