@@ -13,13 +13,15 @@ interface Session {
   created_at: string
 }
 
+type AgentResponseKey = "atlas_response" | "nova_response" | "reza_response" | "kai_response"
+
 const OUTCOME_OPTIONS = [
   { value: "acted", label: "✅ Acted on it", color: "#00FF9C" },
   { value: "skipped", label: "⛔ Didn't act", color: "#FF5A6A" },
   { value: "pending", label: "⏳ Still deciding", color: "#FFA500" },
 ]
 
-const AGENTS = [
+const AGENTS: { key: AgentResponseKey; name: string; color: string }[] = [
   { key: "atlas_response", name: "Atlas 🌐", color: "#00D4FF" },
   { key: "nova_response", name: "Nova ✨", color: "#C96FFF" },
   { key: "reza_response", name: "Reza ⚡", color: "#FF5A6A" },
@@ -230,7 +232,7 @@ export default function History() {
                   {/* Agent responses */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "16px" }}>
                     {AGENTS.map((agent) => {
-                      const text = (s as Record<string, string>)[agent.key]
+                      const text = s[agent.key]
                       if (!text) return null
                       return (
                         <div key={agent.key} style={{
