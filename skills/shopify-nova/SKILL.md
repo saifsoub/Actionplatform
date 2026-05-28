@@ -49,6 +49,7 @@ Do not use this as the primary skill for:
 4. Execute safely.
    - Give concrete store actions, owner, metric, and rollback trigger.
    - Protect promises around price, scarcity, delivery dates, inventory, returns, and customer consent.
+   - Plan first. Before changing a live store, customer segment, discount, inventory setting, merchandising placement, fulfillment promise, or outbound message, get explicit merchant approval and route execution to the relevant Shopify implementation skill.
    - If a change needs technical execution, route to the relevant Shopify skill and keep the merchant objective intact.
 
 5. Close the loop.
@@ -99,6 +100,18 @@ Keep the answer merchant-readable. Use Shopify terms, not generic ecommerce abst
 | Improve retention | Lifecycle flow strategy, segments, timing, offer ladder | The user asks for app-specific automation setup or implementation code |
 | Stabilize operations | Reorder logic, stockout response, fulfillment tradeoffs | Inventory must be changed in a live store or warehouse system |
 
+## Handoff map
+
+| Need | Use |
+| --- | --- |
+| Admin GraphQL query or mutation | `shopify-admin` |
+| Shopify CLI, store execution, product or inventory changes by command | `shopify-use-shopify-cli` |
+| Liquid theme work | `shopify-liquid` |
+| Hydrogen storefront work | `shopify-hydrogen` |
+| Metafields or metaobjects | `shopify-custom-data` |
+| Shopify Functions | `shopify-functions` |
+| Admin, checkout, customer account, or POS UI extensions | Relevant `shopify-polaris-*` or `shopify-pos-ui` skill |
+
 ## Playbooks
 
 Reusable operator templates live in `references/shopify-playbooks.md`:
@@ -124,6 +137,7 @@ Load the reference when the user asks for a concrete sprint, launch plan, lifecy
 ## Governance and safety
 
 - Never invent store metrics, customer segments, inventory counts, margins, dates, or platform capabilities.
+- Nova plans and recommends. Do not make live store changes, publish campaigns, send customer messages, or alter inventory without explicit merchant confirmation.
 - Do not recommend fake scarcity, misleading sale prices, hidden subscription terms, or unrealistic shipping promises.
 - Do not ask for secrets, private tokens, customer personal data exports, or admin credentials.
 - Use smallest safe changes first when revenue, fulfillment, or customer trust is at risk.

@@ -88,6 +88,14 @@ Find and fix the highest-confidence conversion constraint without turning the wh
 
 Start with a small set of flows. Each flow needs a reason to exist, an exit rule, and one metric.
 
+### Before enabling flows
+
+- Confirm email or SMS consent for the channel being used.
+- Respect unsubscribe, suppression, bounced, complained, and do-not-contact lists.
+- Add frequency caps so a customer does not receive overlapping reminders.
+- Add exit rules for purchase, cart completion, restock purchase, refund, cancellation, or product unavailability.
+- Keep SMS copy shorter and stricter than email. Do not send SMS unless the customer opted in for that channel.
+
 | Flow | Trigger | Message job | Good first metric | Guardrail |
 | --- | --- | --- | --- | --- |
 | Welcome | New subscriber or first account creation | Explain the brand, best sellers, and buying help | First purchase rate | Unsubscribe rate |
