@@ -105,6 +105,7 @@ Keep the answer merchant-readable. Use Shopify terms, not generic ecommerce abst
 | Need | Use |
 | --- | --- |
 | Admin GraphQL query or mutation | `shopify-admin` |
+| Storefront GraphQL, custom storefront product queries, or cart operations | `shopify-storefront-graphql` |
 | Shopify CLI, store execution, product or inventory changes by command | `shopify-use-shopify-cli` |
 | Liquid theme work | `shopify-liquid` |
 | Hydrogen storefront work | `shopify-hydrogen` |

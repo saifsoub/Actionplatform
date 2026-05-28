@@ -63,8 +63,8 @@ Find and fix the highest-confidence conversion constraint without turning the wh
 
 ### Launch channels
 
-- Email to eligible customers
-- SMS only for opted-in recipients
+- Email only to subscribed, non-suppressed recipients who are eligible for the offer
+- SMS only for opted-in, non-suppressed recipients who are eligible for the offer
 - Paid media or retargeting with matching terms and dates
 - Organic social and creator copy with the same offer rules
 - Customer support macro for promo questions
@@ -72,6 +72,7 @@ Find and fix the highest-confidence conversion constraint without turning the wh
 ### QA before launch
 
 - Offer applies only to intended products and customers.
+- Unsubscribes, do-not-contact lists, bounced addresses, complained contacts, and suppression rules are respected.
 - Stacking rules are clear.
 - Inventory is enough for featured products.
 - Shipping promise is realistic.
