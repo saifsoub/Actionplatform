@@ -136,6 +136,15 @@ def test_get_profile_requires_authentication(client: TestClient) -> None:
     assert response.status_code == 401
 
 
+def test_update_profile_requires_authentication(client: TestClient) -> None:
+    response = client.put(
+        f"{settings.API_V1_STR}/profile/",
+        json={"role": "Founder"},
+    )
+
+    assert response.status_code == 401
+
+
 def test_update_profile_rejects_invalid_field_length(
     client: TestClient, db: Session
 ) -> None:
