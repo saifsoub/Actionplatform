@@ -9,6 +9,7 @@ Use this checklist before changing Shopify publication state. Keep the completed
 - Confirm the target sales channel, publication, theme role, or Online Store target.
 - Confirm the source of truth and save it unchanged.
 - Confirm whether draft, archived, hidden, embargoed, out-of-stock, or incomplete resources are in scope.
+- Confirm the merchant-owned signal for hidden-by-design resources, such as a CSV column, tag, metafield, collection, or written list.
 - Fetch current Shopify state for every candidate.
 - Record a before-state snapshot with resource ID, handle, title, status, target state, and timestamp.
 - Normalize the source list to one publishable resource per row.
@@ -16,6 +17,7 @@ Use this checklist before changing Shopify publication state. Keep the completed
 - Flag missing IDs, duplicate handles, duplicate SKUs, changed handles, and resources not found in Shopify.
 - Flag resources that are currently hidden and would become visible.
 - Flag resources already in the requested state.
+- Flag resources that are published on other channels but not on the requested target.
 
 ## Dry-run manifest
 
@@ -51,6 +53,7 @@ Before execution, report:
 - Count by category.
 - Count currently hidden that would become visible.
 - Count draft or archived resources in scope.
+- Count draft products that would also need status activation.
 - Count ambiguous or not found resources.
 - Exact target channel or publication.
 - Planned batch size and stop conditions.
@@ -62,7 +65,7 @@ Approval must reference the manifest, exact rows, or exact counts. If the approv
 - Re-check the store identity immediately before changing data.
 - Execute only rows approved for change.
 - Use current Shopify Admin API or Shopify CLI guidance for the exact operation.
-- Keep batch sizes small enough to isolate failures.
+- Start with 25 resources for high-risk launches or 50 for routine verified work, then reduce the size if Shopify throttles, a batch partially fails, or verification mismatches appear.
 - Respect Shopify rate limits.
 - Log resource ID, handle, prior state, requested state, result, error, and timestamp for every row.
 - Pause after the first batch and verify before continuing when the change is high risk.

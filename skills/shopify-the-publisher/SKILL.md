@@ -53,8 +53,10 @@ If any input is missing, produce a dry-run plan and ask for the missing decision
 3. Build a dry-run manifest.
    - Normalize inputs to one row per publishable resource.
    - Group product variants under their parent product. Variants are not published independently.
+   - Treat hidden-by-design status as a merchant-owned signal. Use an explicit CSV column, tag, metafield, collection, written list, or prior-state rule. If the signal is unclear, mark the row `blocked`.
    - Categorize each resource as `would_change`, `already_correct`, `excluded`, `ambiguous`, `not_found`, or `blocked`.
    - Count resources that are currently hidden and would become visible.
+   - Report resources that are live on other channels but hidden from the requested target.
 
 4. Gate on approval.
    - Show totals and risky rows before execution.
@@ -63,7 +65,8 @@ If any input is missing, produce a dry-run plan and ask for the missing decision
 
 5. Execute in batches.
    - Use the current Shopify Admin API or Shopify CLI guidance for the exact mutation or command.
-   - Limit batch size, respect rate limits, and log every attempted resource.
+   - Start with batches of 25 resources for high-risk launches or 50 for routine verified work, then adjust down on throttling, partial failure, or verification mismatch.
+   - Respect rate limits and log every attempted resource.
    - Stop on systemic failures, permission errors, wrong-store signals, or unexpected target channels.
 
 6. Verify from Shopify.
@@ -80,9 +83,22 @@ If any input is missing, produce a dry-run plan and ask for the missing decision
 - Never publish all candidates from a vague instruction if any item may be intentionally hidden.
 - Never assume Online Store means every sales channel.
 - Never change draft or archived resources unless the request explicitly includes them.
+- Treat "publish draft products" as two separate approvals: changing product status to active and publishing to the target.
 - Never rely only on the admin UI after a bulk change. Verify through Shopify data.
 - Never store access tokens, API keys, or session cookies in issues, docs, commits, or chat.
 - If the authenticated store cannot be verified, stop before execution.
+
+## Launch-pressure fast path
+
+When the operator is out of time, do less, not more:
+
+1. Build the dry-run manifest.
+2. Publish only active, unambiguous, not-hidden, not-already-correct resources for the confirmed target.
+3. Skip hidden, draft, archived, ambiguous, not-found, and blocked rows.
+4. Require approval by manifest name and exact counts.
+5. Verify the first batch before continuing.
+
+This path is the fastest safe option. It does not turn skipped rows into approved rows.
 
 ## Quick reference
 
@@ -92,6 +108,8 @@ If any input is missing, produce a dry-run plan and ask for the missing decision
 | Hidden products included | Require explicit approval for those exact products |
 | CSV has variant rows | Collapse to parent products before publishing |
 | Handles or SKUs are duplicated | Mark ambiguous and skip |
+| Draft products included | Separate status activation approval from publication approval |
+| Product live elsewhere | Report other-channel state without changing it |
 | API returns permission or publication errors | Stop the batch and diagnose |
 | Verification count differs | Report mismatch and do not claim completion |
 
@@ -101,6 +119,7 @@ If any input is missing, produce a dry-run plan and ask for the missing decision
 - Counting CSV rows instead of unique publishable resources.
 - Matching by SKU when the operation happens at product level.
 - Publishing to all channels when the user asked for Online Store.
+- Activating draft products as a side effect of publication.
 - Skipping before-state capture, which makes rollback slow and error-prone.
 - Reporting only successful API responses without re-querying Shopify.
 

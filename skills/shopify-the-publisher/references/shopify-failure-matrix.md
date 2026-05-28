@@ -11,6 +11,8 @@ Use this matrix during execution and verification. When in doubt, stop before ch
 | Ambiguous match | Duplicate handles, duplicate SKUs, handle changed, multiple matches | Mark row `ambiguous` and skip | Do not retry without a stable ID |
 | State drift | Resource changed since dry run, status changed to draft or archived | Stop high-risk batches, refresh manifest | Retry only with a new dry run |
 | Validation error | Draft resource cannot publish, required field missing, invalid publication input | Mark row `blocked` | Retry after data is fixed and approved |
+| Missing hidden signal | Source data does not prove whether hidden products are accidental or intentional | Mark affected rows `blocked` | Retry only after the merchant provides a clear signal |
+| Draft activation risk | Publish request would also require changing product status to active | Split status activation from publication approval | Retry only after both approvals are explicit |
 | Rate limit | Throttle response, cost limit, retry-after header | Pause and back off | Retry with smaller batches and logged attempts |
 | Transient API error | 429, 500, 502, 503, network timeout | Pause and retry the same row or batch once safe | Retry with exponential backoff and idempotent checks |
 | Partial batch failure | Some rows changed and some failed | Stop if cause is unknown, then verify changed rows | Retry only failed rows after diagnosis |
