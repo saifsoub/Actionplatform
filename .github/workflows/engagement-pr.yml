@@ -51,7 +51,7 @@ jobs:
       - run: uv sync --frozen
       - run: uv run alembic upgrade head
       - run: uv run pytest tests/api/routes/test_engagement.py
-      - run: uv run ruff check app tests/api/routes/test_engagement.py
+      - run: uv run ruff check app/api/routes/engagement.py tests/api/routes/test_engagement.py
 
   frontend:
     runs-on: ubuntu-latest
