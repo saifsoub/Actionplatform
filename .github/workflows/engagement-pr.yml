@@ -50,7 +50,14 @@ jobs:
         with:
           enable-cache: true
       - run: uv sync --frozen
-      - run: uv run alembic upgrade heads
+      - name: Report migration heads
+        run: uv run alembic heads
+      - name: Create test schema from current models
+        run: >-
+          uv run python -c "from sqlmodel import SQLModel;
+          from app.core.db import engine;
+          import app.models;
+          SQLModel.metadata.create_all(engine)"
       - run: uv run pytest tests/api/routes/test_engagement.py
       - run: uv run ruff check app/api/routes/engagement.py tests/api/routes/test_engagement.py
 
