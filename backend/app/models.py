@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
+from typing import Optional
 
 from pydantic import EmailStr
 from sqlalchemy import DateTime
@@ -57,9 +58,10 @@ class User(UserBase, table=True):
     items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
     agents: list["Agent"] = Relationship(back_populates="owner", cascade_delete=True)
     skills: list["Skill"] = Relationship(back_populates="owner", cascade_delete=True)
-    subscription: "Subscription | None" = Relationship(back_populates="user")
+    subscription: Optional["Subscription"] = Relationship(back_populates="user")
     council_sessions: list["CouncilSession"] = Relationship(back_populates="owner", cascade_delete=True)
-    profile: "UserProfile | None" = Relationship(back_populates="user")
+    profile: Optional["UserProfile"] = Relationship(back_populates="user")
+    engagement_posts: list["EngagementPost"] = Relationship(back_populates="owner", cascade_delete=True)
 
 
 # Properties to return via API, id is always required
@@ -172,7 +174,7 @@ class Agent(AgentBase, table=True):
     owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE", index=True
     )
-    owner: "User | None" = Relationship(back_populates="agents")
+    owner: Optional["User"] = Relationship(back_populates="agents")
     skills: list["AgentSkillLink"] = Relationship(back_populates="agent", cascade_delete=True)
 
 
@@ -216,7 +218,7 @@ class Skill(SkillBase, table=True):
     owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE", index=True
     )
-    owner: "User | None" = Relationship(back_populates="skills")
+    owner: Optional["User"] = Relationship(back_populates="skills")
     agent_links: list["AgentSkillLink"] = Relationship(back_populates="skill", cascade_delete=True)
 
 
@@ -281,7 +283,7 @@ class Subscription(SubscriptionBase, table=True):
     user_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE", unique=True
     )
-    user: "User | None" = Relationship(back_populates="subscription")
+    user: Optional["User"] = Relationship(back_populates="subscription")
 
 
 class SubscriptionPublic(SubscriptionBase):
@@ -328,7 +330,7 @@ class CouncilSession(CouncilSessionBase, table=True):
     owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE", index=True
     )
-    owner: "User | None" = Relationship(back_populates="council_sessions")
+    owner: Optional["User"] = Relationship(back_populates="council_sessions")
 
 
 class CouncilSessionPublic(CouncilSessionBase):
@@ -345,6 +347,191 @@ class CouncilSessionsPublic(SQLModel):
 class CouncilSessionOutcomeUpdate(SQLModel):
     outcome: CouncilOutcome
     outcome_note: str | None = Field(default=None, max_length=500)
+
+
+# ─────────────────────────────────────────────
+# Engagement monitoring
+# ─────────────────────────────────────────────
+
+class EngagementPostStatus(str, Enum):
+    monitoring = "monitoring"
+    paused = "paused"
+    completed = "completed"
+
+
+class FollowUpStatus(str, Enum):
+    open = "open"
+    done = "done"
+    dismissed = "dismissed"
+
+
+class FollowUpPriority(str, Enum):
+    low = "low"
+    medium = "medium"
+    high = "high"
+
+
+class EngagementPostBase(SQLModel):
+    title: str = Field(min_length=1, max_length=200)
+    linkedin_url: str = Field(min_length=1, max_length=500)
+    published_at: datetime = Field(sa_type=DateTime(timezone=True))  # type: ignore
+    monitor_until: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))  # type: ignore
+    check_interval_hours: int = Field(default=24, ge=1, le=168)
+    status: EngagementPostStatus = EngagementPostStatus.monitoring
+    next_check_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))  # type: ignore
+    last_checked_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))  # type: ignore
+    notes: str | None = Field(default=None, max_length=1000)
+
+
+class EngagementPostCreate(EngagementPostBase):
+    pass
+
+
+class EngagementPostUpdate(SQLModel):
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    linkedin_url: str | None = Field(default=None, min_length=1, max_length=500)
+    monitor_until: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))  # type: ignore
+    check_interval_hours: int | None = Field(default=None, ge=1, le=168)
+    status: EngagementPostStatus | None = None
+    next_check_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))  # type: ignore
+    notes: str | None = Field(default=None, max_length=1000)
+
+
+class EngagementPost(EngagementPostBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    owner_id: uuid.UUID = Field(
+        foreign_key="user.id", nullable=False, ondelete="CASCADE", index=True
+    )
+    owner: Optional["User"] = Relationship(back_populates="engagement_posts")
+    checks: list["EngagementCheck"] = Relationship(back_populates="post", cascade_delete=True)
+    follow_up_opportunities: list["FollowUpOpportunity"] = Relationship(back_populates="post", cascade_delete=True)
+
+
+class EngagementPostPublic(EngagementPostBase):
+    id: uuid.UUID
+    owner_id: uuid.UUID
+    created_at: datetime | None = None
+
+
+class EngagementPostsPublic(SQLModel):
+    data: list[EngagementPostPublic]
+    count: int
+
+
+class FollowUpOpportunityBase(SQLModel):
+    source: str = Field(default="comment", min_length=1, max_length=50)
+    contact_name: str | None = Field(default=None, max_length=120)
+    profile_url: str | None = Field(default=None, max_length=500)
+    prompt: str = Field(min_length=1, max_length=1000)
+    priority: FollowUpPriority = FollowUpPriority.medium
+    status: FollowUpStatus = FollowUpStatus.open
+    outcome_note: str | None = Field(default=None, max_length=1000)
+
+
+class FollowUpOpportunityCreate(FollowUpOpportunityBase):
+    pass
+
+
+class FollowUpOpportunityUpdate(SQLModel):
+    status: FollowUpStatus | None = None
+    priority: FollowUpPriority | None = None
+    outcome_note: str | None = Field(default=None, max_length=1000)
+
+
+class FollowUpOpportunity(FollowUpOpportunityBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    post_id: uuid.UUID = Field(
+        foreign_key="engagementpost.id", nullable=False, ondelete="CASCADE", index=True
+    )
+    owner_id: uuid.UUID = Field(
+        foreign_key="user.id", nullable=False, ondelete="CASCADE", index=True
+    )
+    post: Optional["EngagementPost"] = Relationship(back_populates="follow_up_opportunities")
+
+
+class FollowUpOpportunityPublic(FollowUpOpportunityBase):
+    id: uuid.UUID
+    post_id: uuid.UUID
+    owner_id: uuid.UUID
+    created_at: datetime | None = None
+
+
+class EngagementCheckCreate(SQLModel):
+    checked_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))  # type: ignore
+    comments_count: int = Field(default=0, ge=0)
+    reactions_count: int = Field(default=0, ge=0)
+    reposts_count: int = Field(default=0, ge=0)
+    impressions_count: int = Field(default=0, ge=0)
+    notes: str | None = Field(default=None, max_length=1000)
+    follow_up_opportunities: list[FollowUpOpportunityCreate] = Field(default_factory=list)
+
+
+class EngagementCheck(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    checked_at: datetime = Field(sa_type=DateTime(timezone=True))  # type: ignore
+    comments_count: int = Field(default=0)
+    comments_delta: int = Field(default=0)
+    reactions_count: int = Field(default=0)
+    reactions_delta: int = Field(default=0)
+    reposts_count: int = Field(default=0)
+    reposts_delta: int = Field(default=0)
+    impressions_count: int = Field(default=0)
+    impressions_delta: int = Field(default=0)
+    notes: str | None = Field(default=None, max_length=1000)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    post_id: uuid.UUID = Field(
+        foreign_key="engagementpost.id", nullable=False, ondelete="CASCADE", index=True
+    )
+    owner_id: uuid.UUID = Field(
+        foreign_key="user.id", nullable=False, ondelete="CASCADE", index=True
+    )
+    post: Optional["EngagementPost"] = Relationship(back_populates="checks")
+
+
+class EngagementCheckPublic(SQLModel):
+    id: uuid.UUID
+    post_id: uuid.UUID
+    owner_id: uuid.UUID
+    checked_at: datetime
+    comments_count: int
+    comments_delta: int
+    reactions_count: int
+    reactions_delta: int
+    reposts_count: int
+    reposts_delta: int
+    impressions_count: int
+    impressions_delta: int
+    notes: str | None = None
+    created_at: datetime | None = None
+
+
+class EngagementCheckResult(SQLModel):
+    post: EngagementPostPublic
+    check: EngagementCheckPublic
+    follow_up_opportunities: list[FollowUpOpportunityPublic]
+
+
+class EngagementWorkflowTotals(SQLModel):
+    monitored_posts: int
+    posts_to_check: int
+    open_follow_ups: int
+
+
+class EngagementWorkflowPublic(SQLModel):
+    totals: EngagementWorkflowTotals
+    posts_to_check: list[EngagementPostPublic]
+    open_follow_ups: list[FollowUpOpportunityPublic]
 
 
 # ─────────────────────────────────────────────
@@ -370,7 +557,7 @@ class UserProfile(UserProfileBase, table=True):
     user_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE", unique=True
     )
-    user: "User | None" = Relationship(back_populates="profile")
+    user: Optional["User"] = Relationship(back_populates="profile")
 
 
 class UserProfilePublic(UserProfileBase):

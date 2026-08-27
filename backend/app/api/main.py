@@ -1,6 +1,18 @@
 from fastapi import APIRouter
 
-from app.api.routes import agents, council, items, login, private, profile, sessions, skills, users, utils
+from app.api.routes import (
+    agents,
+    council,
+    engagement,
+    items,
+    login,
+    private,
+    profile,
+    sessions,
+    skills,
+    users,
+    utils,
+)
 from app.core.config import settings
 
 api_router = APIRouter()
@@ -13,6 +25,7 @@ api_router.include_router(skills.router)
 api_router.include_router(council.router)
 api_router.include_router(sessions.router)
 api_router.include_router(profile.router)
+api_router.include_router(engagement.router)
 
 
 if settings.ENVIRONMENT == "local":

@@ -19,6 +19,7 @@ import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as LayoutCouncilRouteImport } from './routes/_layout/council'
+import { Route as LayoutEngagementRouteImport } from './routes/_layout/engagement'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -69,6 +70,11 @@ const LayoutCouncilRoute = LayoutCouncilRouteImport.update({
   path: '/council',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutEngagementRoute = LayoutEngagementRouteImport.update({
+  id: '/engagement',
+  path: '/engagement',
+  getParentRoute: () => LayoutRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
   '/council': typeof LayoutCouncilRoute
+  '/engagement': typeof LayoutEngagementRoute
   '/items': typeof LayoutItemsRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
   '/council': typeof LayoutCouncilRoute
+  '/engagement': typeof LayoutEngagementRoute
   '/items': typeof LayoutItemsRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_layout/admin': typeof LayoutAdminRoute
   '/_layout/council': typeof LayoutCouncilRoute
+  '/_layout/engagement': typeof LayoutEngagementRoute
   '/_layout/items': typeof LayoutItemsRoute
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/': typeof LayoutIndexRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin'
     | '/council'
+    | '/engagement'
     | '/items'
     | '/settings'
     | '/'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin'
     | '/council'
+    | '/engagement'
     | '/items'
     | '/settings'
     | '/'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_layout/admin'
     | '/_layout/council'
+    | '/_layout/engagement'
     | '/_layout/items'
     | '/_layout/settings'
     | '/_layout/'
@@ -222,12 +234,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutCouncilRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/engagement': {
+      id: '/_layout/engagement'
+      path: '/engagement'
+      fullPath: '/engagement'
+      preLoaderRoute: typeof LayoutEngagementRouteImport
+      parentRoute: typeof LayoutRoute
+    }
   }
 }
 
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
   LayoutCouncilRoute: typeof LayoutCouncilRoute
+  LayoutEngagementRoute: typeof LayoutEngagementRoute
   LayoutItemsRoute: typeof LayoutItemsRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
@@ -236,6 +256,7 @@ interface LayoutRouteChildren {
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
   LayoutCouncilRoute: LayoutCouncilRoute,
+  LayoutEngagementRoute: LayoutEngagementRoute,
   LayoutItemsRoute: LayoutItemsRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
   LayoutIndexRoute: LayoutIndexRoute,
