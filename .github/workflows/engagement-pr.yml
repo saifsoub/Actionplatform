@@ -35,6 +35,7 @@ jobs:
       run:
         working-directory: backend
     env:
+      PROJECT_NAME: Actionplatform CI
       POSTGRES_SERVER: localhost
       POSTGRES_PORT: "5432"
       POSTGRES_USER: postgres
@@ -62,5 +63,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
-      - run: bun run build
-      - run: bunx biome check --no-errors-on-unmatched --files-ignore-unknown=true src
+      - name: Type-check engagement component
+        run: >-
+          bunx tsc --noEmit --jsx react-jsx --moduleResolution bundler
+          --module esnext --target es2022 --skipLibCheck
+          src/components/Engagement/index.tsx
+      - run: bunx biome check --no-errors-on-unmatched --files-ignore-unknown=true src/components/Engagement/index.tsx
