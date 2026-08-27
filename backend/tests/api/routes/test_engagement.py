@@ -165,3 +165,89 @@ def test_engagement_posts_are_owner_scoped(
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Engagement post not found"
+
+
+def test_update_post_normalizes_datetimes_and_clears_paused_schedule(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    post = create_monitored_post(client, superuser_token_headers)
+    response = client.patch(
+        f"{settings.API_V1_STR}/engagement/posts/{post['id']}",
+        headers=superuser_token_headers,
+        json={
+            "status": "paused",
+            "monitor_until": "2026-09-01T12:00:00",
+            "next_check_at": "2026-09-01T13:00:00",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert datetime.fromisoformat(body["monitor_until"]).utcoffset() == timedelta(0)
+    assert body["next_check_at"] is None
+
+
+def test_resuming_post_recalculates_next_check(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    post = create_monitored_post(client, superuser_token_headers)
+    paused = client.patch(
+        f"{settings.API_V1_STR}/engagement/posts/{post['id']}",
+        headers=superuser_token_headers,
+        json={"status": "paused"},
+    )
+    assert paused.status_code == 200
+
+    resumed = client.patch(
+        f"{settings.API_V1_STR}/engagement/posts/{post['id']}",
+        headers=superuser_token_headers,
+        json={"status": "monitoring", "check_interval_hours": 6},
+    )
+
+    assert resumed.status_code == 200
+    body = resumed.json()
+    assert body["status"] == "monitoring"
+    assert body["next_check_at"] is not None
+    assert datetime.fromisoformat(body["next_check_at"]) > datetime.now(timezone.utc)
+
+
+def test_paused_post_rejects_engagement_check(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    post = create_monitored_post(client, superuser_token_headers)
+    client.patch(
+        f"{settings.API_V1_STR}/engagement/posts/{post['id']}",
+        headers=superuser_token_headers,
+        json={"status": "paused"},
+    )
+
+    response = client.post(
+        f"{settings.API_V1_STR}/engagement/posts/{post['id']}/checks",
+        headers=superuser_token_headers,
+        json={"comments_count": 1, "reactions_count": 1},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Cannot record check on a paused post"
+
+
+def test_completed_post_check_does_not_reschedule(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    post = create_monitored_post(client, superuser_token_headers)
+    completed = client.patch(
+        f"{settings.API_V1_STR}/engagement/posts/{post['id']}",
+        headers=superuser_token_headers,
+        json={"status": "completed"},
+    )
+    assert completed.status_code == 200
+
+    response = client.post(
+        f"{settings.API_V1_STR}/engagement/posts/{post['id']}/checks",
+        headers=superuser_token_headers,
+        json={"comments_count": 2, "reactions_count": 3},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["post"]["status"] == "completed"
+    assert response.json()["post"]["next_check_at"] is None
