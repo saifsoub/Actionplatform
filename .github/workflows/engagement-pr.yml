@@ -50,7 +50,7 @@ jobs:
         with:
           enable-cache: true
       - run: uv sync --frozen
-      - run: uv run alembic upgrade head
+      - run: uv run alembic upgrade heads
       - run: uv run pytest tests/api/routes/test_engagement.py
       - run: uv run ruff check app/api/routes/engagement.py tests/api/routes/test_engagement.py
 
@@ -66,6 +66,6 @@ jobs:
       - name: Type-check engagement component
         run: >-
           bunx tsc --noEmit --jsx react-jsx --moduleResolution bundler
-          --module esnext --target es2022 --skipLibCheck
+          --module esnext --target es2022 --skipLibCheck --types vite/client
           src/components/Engagement/index.tsx
       - run: bunx biome check --no-errors-on-unmatched --files-ignore-unknown=true src/components/Engagement/index.tsx
