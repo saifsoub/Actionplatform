@@ -139,6 +139,41 @@ def update_post(
 ) -> EngagementPost:
     post = get_owned_post(session, current_user, post_id)
     update_data = body.model_dump(exclude_unset=True)
+
+    for field in ("monitor_until", "next_check_at"):
+        value = update_data.get(field)
+        if value is not None:
+            update_data[field] = as_utc(value)
+
+    new_status = update_data.get("status")
+    if new_status is not None and new_status != post.status:
+        if new_status in (
+            EngagementPostStatus.paused,
+            EngagementPostStatus.completed,
+        ):
+            update_data["next_check_at"] = None
+        elif new_status == EngagementPostStatus.monitoring:
+            interval = update_data.get(
+                "check_interval_hours", post.check_interval_hours
+            )
+            base_time = as_utc(
+                post.last_checked_at or post.published_at or utc_now()
+            )
+            next_check_at = base_time + timedelta(hours=interval)
+            now = utc_now()
+            if next_check_at <= now:
+                next_check_at = now + timedelta(hours=interval)
+
+            monitor_until = update_data.get(
+                "monitor_until", post.monitor_until
+            )
+            if monitor_until is not None:
+                monitor_until = as_utc(monitor_until)
+                if next_check_at > monitor_until:
+                    update_data["status"] = EngagementPostStatus.completed
+                    next_check_at = None
+            update_data["next_check_at"] = next_check_at
+
     post.sqlmodel_update(update_data)
     session.add(post)
     session.commit()
@@ -166,6 +201,12 @@ def record_check(
     current_user: CurrentUser,
 ) -> EngagementCheckResult:
     post = get_owned_post(session, current_user, post_id)
+    if post.status == EngagementPostStatus.paused:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot record check on a paused post",
+        )
+
     previous_check = session.exec(
         select(EngagementCheck)
         .where(EngagementCheck.post_id == post.id)
@@ -204,13 +245,16 @@ def record_check(
     for follow_up in follow_ups:
         session.add(follow_up)
 
-    next_check_at = checked_at + timedelta(hours=post.check_interval_hours)
-    monitor_until = as_utc(post.monitor_until) if post.monitor_until else None
-    if monitor_until and next_check_at > monitor_until:
-        post.status = EngagementPostStatus.completed
+    if post.status == EngagementPostStatus.completed:
         post.next_check_at = None
     else:
-        post.next_check_at = next_check_at
+        next_check_at = checked_at + timedelta(hours=post.check_interval_hours)
+        monitor_until = as_utc(post.monitor_until) if post.monitor_until else None
+        if monitor_until and next_check_at > monitor_until:
+            post.status = EngagementPostStatus.completed
+            post.next_check_at = None
+        else:
+            post.next_check_at = next_check_at
     post.last_checked_at = checked_at
     session.add(post)
 
