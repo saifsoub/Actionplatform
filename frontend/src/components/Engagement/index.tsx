@@ -211,11 +211,12 @@ export default function Engagement() {
 
       const postsBody: EngagementPostsResponse = await postsResponse.json()
       const workflowBody: EngagementWorkflow = await workflowResponse.json()
-      setPosts(postsBody.data ?? [])
+      const loadedPosts = Array.isArray(postsBody.data) ? postsBody.data : []
+      setPosts(loadedPosts)
       setWorkflow(workflowBody)
       setCheckForm((current) => {
-        if (current.post_id || postsBody.data.length === 0) return current
-        return { ...current, post_id: postsBody.data[0].id }
+        if (current.post_id || loadedPosts.length === 0) return current
+        return { ...current, post_id: loadedPosts[0].id }
       })
     } catch {
       setError("Could not reach the server. Check your connection.")
@@ -233,6 +234,21 @@ export default function Engagement() {
       setError("Add a title and LinkedIn URL before tracking a post.")
       return
     }
+    const publishedAt = new Date(postForm.published_at)
+    if (Number.isNaN(publishedAt.getTime())) {
+      setError("Enter a valid publication date.")
+      return
+    }
+
+    let monitorUntil: Date | null = null
+    if (postForm.monitor_until) {
+      monitorUntil = new Date(postForm.monitor_until)
+      if (Number.isNaN(monitorUntil.getTime())) {
+        setError("Enter a valid monitoring end date.")
+        return
+      }
+    }
+
     setSaving(true)
     setError(null)
     try {
@@ -242,10 +258,8 @@ export default function Engagement() {
         body: JSON.stringify({
           title: postForm.title,
           linkedin_url: postForm.linkedin_url,
-          published_at: new Date(postForm.published_at).toISOString(),
-          monitor_until: postForm.monitor_until
-            ? new Date(postForm.monitor_until).toISOString()
-            : null,
+          published_at: publishedAt.toISOString(),
+          monitor_until: monitorUntil?.toISOString() ?? null,
           check_interval_hours: parseCount(postForm.check_interval_hours) || 12,
           notes: postForm.notes || null,
         }),
@@ -271,6 +285,13 @@ export default function Engagement() {
   async function recordCheck() {
     if (!checkForm.post_id) {
       setError("Choose a post before logging engagement.")
+      return
+    }
+    if (
+      (checkForm.contact_name.trim() || checkForm.profile_url.trim()) &&
+      !checkForm.prompt.trim()
+    ) {
+      setError("Add a follow-up prompt for the contact or profile.")
       return
     }
     setSaving(true)
