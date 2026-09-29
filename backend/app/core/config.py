@@ -68,6 +68,9 @@ class Settings(BaseSettings):
             path=self.POSTGRES_DB,
         )
 
+    S_PASSPORT_URL: str | None = None
+    S_PASSPORT_SERVICE_ROLE_KEY: str | None = None
+
     ANTHROPIC_API_KEY: str | None = None
     COUNCIL_MODEL: str = "claude-opus-4-6"
 
