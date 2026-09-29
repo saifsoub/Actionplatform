@@ -9,6 +9,7 @@ from app.api.routes import (
     private,
     profile,
     sessions,
+    s_squad,
     shopify_skill_runtime,
     skills,
     users,
@@ -24,6 +25,7 @@ api_router.include_router(items.router)
 api_router.include_router(agents.router)
 api_router.include_router(skills.router)
 api_router.include_router(shopify_skill_runtime.router)
+api_router.include_router(s_squad.router)
 api_router.include_router(council.router)
 api_router.include_router(sessions.router)
 api_router.include_router(profile.router)
