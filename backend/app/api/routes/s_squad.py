@@ -1,4 +1,4 @@
-"""S/Squad execution through the canonical S/Passport authority gate.
+"""Squad execution through the canonical Passport authority gate.
 
 A repository seat is not a live worker merely because its Passport ID exists.
 Every invocation checks current identity and policy before the model is called.
@@ -18,7 +18,7 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/s-squad", tags=["s-squad"])
 
-# Canonical seat-to-Passport assignment in S/Agency's registry.
+# Canonical seat-to-Passport assignment in the registry.
 SEATS = {
     "team-lead": ("S-PASS-4C7A130D9E1D", "planning", "Squad Lead: plan, route, coordinate, and escalate."),
     "business-strategy": ("S-PASS-1FD06ADB440F", "business_planning", "Business Strategist: produce commercial analysis and plans."),
@@ -61,7 +61,7 @@ def owner_only(user: CurrentUser) -> None:
 
 def registry_url() -> str:
     if not settings.S_PASSPORT_URL:
-        raise HTTPException(status_code=503, detail="S/Passport registry not configured")
+        raise HTTPException(status_code=503, detail="Passport registry not configured")
     return settings.S_PASSPORT_URL.rstrip("/")
 
 
@@ -74,8 +74,8 @@ async def passport_status(client: httpx.AsyncClient, passport_id: str, seat_id: 
         response.raise_for_status()
         passports = response.json().get("passports", [])
     except (httpx.HTTPError, ValueError, AttributeError):
-        logger.exception("S/Passport registry unavailable")
-        raise HTTPException(status_code=503, detail="S/Passport registry unavailable")
+        logger.exception("Passport registry unavailable")
+        raise HTTPException(status_code=503, detail="Passport registry unavailable")
     if len(passports) != 1 or passports[0].get("passport_id") != passport_id:
         raise HTTPException(status_code=403, detail="Passport identity unavailable")
     return str(passports[0].get("status", ""))
@@ -99,13 +99,13 @@ async def run_squad_seat(
     owner_only(current_user)
     seat = SEATS.get(seat_id)
     if seat is None:
-        raise HTTPException(status_code=404, detail="S/Squad seat not found")
+        raise HTTPException(status_code=404, detail="Squad seat not found")
     passport_id, capability, role = seat
     if not settings.S_PASSPORT_SERVICE_ROLE_KEY:
-        raise HTTPException(status_code=503, detail="S/Passport gate credential not configured")
+        raise HTTPException(status_code=503, detail="Passport gate credential not configured")
     async with httpx.AsyncClient(timeout=10) as client:
         if await passport_status(client, passport_id, seat_id) != "active":
-            raise HTTPException(status_code=409, detail="S/Squad seat Passport is paused")
+            raise HTTPException(status_code=409, detail="Squad seat Passport is paused")
         try:
             gate = await client.post(
                 f"{registry_url()}/functions/v1/passport-gate",
@@ -126,8 +126,8 @@ async def run_squad_seat(
             )
             decision = gate.json()
         except (httpx.HTTPError, ValueError):
-            logger.exception("S/Passport authority gate unavailable")
-            raise HTTPException(status_code=503, detail="S/Passport authority gate unavailable")
+            logger.exception("Passport authority gate unavailable")
+            raise HTTPException(status_code=503, detail="Passport authority gate unavailable")
     if decision.get("decision") != "allow":
         raise HTTPException(
             status_code=403,
@@ -138,7 +138,7 @@ async def run_squad_seat(
     if not settings.ANTHROPIC_API_KEY:
         raise HTTPException(status_code=503, detail="AI service not configured")
     system = (
-        f"You are the S/Squad {seat_id} seat under S/Agency. {role} "
+        f"You are the Squad {seat_id} seat under the agency. {role} "
         "Operate only within the authorized task and supplied context. "
         "This API gives you no external tools: do not claim to have changed data, "
         "deployed, sent messages, or completed a task in another system. "
@@ -154,7 +154,7 @@ async def run_squad_seat(
     except anthropic_sdk.RateLimitError:
         raise HTTPException(status_code=429, detail="AI service rate limit reached")
     except anthropic_sdk.APIError:
-        logger.exception("S/Squad model unavailable for seat %s", seat_id)
+        logger.exception("Squad model unavailable for seat %s", seat_id)
         raise HTTPException(status_code=502, detail="AI service unavailable")
     answer = "\n".join(
         block.text for block in message.content
