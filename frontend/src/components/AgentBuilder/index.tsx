@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 
 interface Agent {
   id: string
@@ -38,6 +38,8 @@ const DEFAULT_FORM = {
   is_public: false,
 }
 
+type AgentForm = typeof DEFAULT_FORM
+
 function apiUrl() {
   return import.meta.env.VITE_API_URL ?? ""
 }
@@ -51,7 +53,8 @@ function authHeaders() {
 export default function AgentBuilder() {
   const [agents, setAgents] = useState<Agent[]>([])
   const [skills, setSkills] = useState<Skill[]>([])
-  const [form, setForm] = useState({ ...DEFAULT_FORM })
+  const [templates, setTemplates] = useState<AgentForm[]>([])
+  const [form, setForm] = useState<AgentForm>({ ...DEFAULT_FORM })
   const [skillForm, setSkillForm] = useState({ name: "", description: "", instructions: "", tags: "" })
   const [editingId, setEditingId] = useState<string | null>(null)
   const [tab, setTab] = useState<"agents" | "skills">("agents")
@@ -62,9 +65,11 @@ export default function AgentBuilder() {
   const [matchResult, setMatchResult] = useState<{ message: string; matched: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: load studio data once on mount.
   useEffect(() => {
     loadAgents()
     loadSkills()
+    loadTemplates()
   }, [])
 
   async function loadAgents() {
@@ -89,6 +94,20 @@ export default function AgentBuilder() {
         setSkills(data.data ?? [])
       } else if (res.status !== 401) {
         setError("Failed to load skills.")
+      }
+    } catch {
+      setError("Could not reach the server. Check your connection.")
+    }
+  }
+
+  async function loadTemplates() {
+    try {
+      const res = await fetch(`${apiUrl()}/api/v1/agents/templates`, { headers: authHeaders() })
+      if (res.ok) {
+        const data = await res.json()
+        setTemplates(data.data ?? [])
+      } else if (res.status !== 401) {
+        setError("Failed to load agent templates.")
       }
     } catch {
       setError("Could not reach the server. Check your connection.")
@@ -226,6 +245,13 @@ export default function AgentBuilder() {
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
+  function applyTemplate(template: AgentForm) {
+    setEditingId(null)
+    setForm({ ...template, is_public: false })
+    setTab("agents")
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
   const S = {
     page: {
       minHeight: "100vh" as const,
@@ -334,6 +360,50 @@ export default function AgentBuilder() {
         {/* ── AGENTS TAB ── */}
         {tab === "agents" && (
           <>
+            {templates.length > 0 && (
+              <div style={S.card}>
+                <div style={{ fontSize: 10, color: "#888", marginBottom: 10, fontWeight: 600 }}>
+                  Start from a template
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {templates.map((template) => (
+                    <div
+                      key={template.name}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        padding: "12px 14px",
+                        border: "1px solid rgba(255,255,255,.07)",
+                        borderRadius: 10,
+                        background: "rgba(255,255,255,.02)",
+                      }}
+                    >
+                      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                        <span style={{ fontSize: 20 }}>{template.emoji}</span>
+                        <div>
+                          <div style={{ fontSize: 12, color: "#DDE0EC", fontWeight: 700 }}>
+                            {template.persona}
+                          </div>
+                          <div style={{ fontSize: 9, color: "#555", marginTop: 2 }}>
+                            {template.role}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => applyTemplate(template)}
+                        style={{ ...S.btn(false), padding: "6px 12px", fontSize: 9, color: "#0A66C2" }}
+                      >
+                        Use template
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Build form */}
             <div style={S.card}>
               <div style={{ fontSize: 10, color: "#888", marginBottom: 16, fontWeight: 600 }}>
